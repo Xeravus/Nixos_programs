@@ -1,3 +1,129 @@
+use serde::{Deserialize, Serialize};
+use clap::{Parser, Subcommand};
+use std::fs;
+use std::env;
+use std::process::Command;
+use walkdir::WalkDir;
+
+#[derive(Parser)]
+#[command(name = "nix-switcher")]
+#[command(about = "Verwaltet Theming und Wallpaper von Hyprland, Hyprpaper, Quickshell, etc.", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands{
+    Set {
+        theme: String,
+        wallpaper_index: usize,
+    },
+    Apply,
+    Config,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Data {
+    theme: String,
+    themedir: String,
+    wallpaper: String,
+    wallpaperdir: String,
+
+}
+
+fn gen_path() -> String {
+    let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
+    format!("{}/.config/rice", home)
+}
+
+fn gen_config() {
+    let themedir = format!("{}/themes", gen_path());
+    let wallpaperdir = format!("{}/wallpaper", gen_path());
+    let basic_conf = Data {
+        theme: String::from("dracula"),
+        themedir: themedir,
+        wallpaper: String::from("dracula"),
+        wallpaperdir: wallpaperdir,
+    };
+    let json_string = serde_json::to_string_pretty(&basic_conf).unwrap();
+    let json_path: String = format!("{}/switcher.json", gen_path());
+    fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
+}
+
+fn change(theme: &str, wallpaper_index: usize) {
+    let structin = read();
+    let structout = Data {
+        theme: String::from(theme),
+        wallpaper: wallpath(wallpaper_index),
+        ..structin
+    };
+    let json_string = serde_json::to_string_pretty(&structout).unwrap();
+    let json_path: String = format!("{}/switcher.json", gen_path());
+    fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
+}
+
+fn apply(structin: Data) {
+    let selected_path: String = format!("{}/themes/{}/apply_theme.sh", gen_path(), structin.theme);
+    let wallpapercommand: String = format!(",{}", structin.wallpaper);
+    Command::new("sh")
+        .arg(&selected_path)
+        .spawn()
+        .expect("Command konnte nicht ausgeführt werden");
+    Command::new("hyprctl")
+        .args(["hyprpaper", "preload", &structin.wallpaper])
+        .status()
+        .expect("Konnte das Wallpaper nicht preloaden");
+    Command::new("hyprctl")
+        .args(["hyprpaper", "wallpaper", &wallpapercommand])
+        .status()
+        .expect("Konnte das Wallpaper nicht ändern");
+    Command::new("hyprctl")
+        .args(["hyprpaper", "unload", "unused"])
+        .status()
+        .expect("Konnte unbenutzte Wallpaper nicht entbinden");
+}
+
+fn read() -> Data {
+    let json_path: String = format!("{}/switcher.json", gen_path());
+    let file_content = fs::read_to_string(&json_path).expect("Datei konnte nicht gelesen werden");
+    let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
+    loaded_config
+}
+
+fn wallpars() -> Vec<String> {
+    let folder_path: String = format!("{}/wallpaper", gen_path());
+    WalkDir::new(&folder_path)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .filter_map(|entry| {
+            entry.path().to_str().map(|s| s.to_string())
+        })
+        .collect()
+}
+
+fn wallpath(index: usize) -> String {
+    let wallpaper = wallpars();
+    if index >=wallpaper.len() {
+        panic!("So viele Wallpaper stehen nicht zur verfügung. Das Maximum sind: {}", wallpaper.len() - 1);
+    }
+    wallpaper[index].clone()
+}
+
 fn main() {
-    println!("Hello, world!");
+    let cli = Cli::parse();
+    match &cli.command {
+       Commands::Set { theme, wallpaper_index } => {
+           change(&theme, *wallpaper_index);
+       }
+       Commands::Apply => {
+           let config = read();
+           apply(config);
+       }
+       Commands::Config => {
+           gen_config();
+           println!("Generated Basic Config");
+       }
+    }
 }
