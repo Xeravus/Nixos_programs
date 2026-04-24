@@ -82,6 +82,10 @@ fn apply(structin: Data) {
         .args(["hyprpaper", "unload", "unused"])
         .status()
         .expect("Konnte unbenutzte Wallpaper nicht entbinden");
+    Command::new("killall")
+        .args(["-SIGUSR1", ".kitty-wrapped"])
+        .status()
+        .expect("Konnte Kitty nicht neuladen");
 }
 
 fn read() -> Data {
