@@ -20,7 +20,7 @@ enum Commands{
         wallpaper_index: usize,
     },
     Apply,
-    Config,
+    Init,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -55,6 +55,12 @@ fn gen_config() {
     let json_path: String = format!("{}/switcher.json", gen_path());
     fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
 }
+
+fn gen_walllist() {
+    let json_string = serde_json::to_string_pretty(&wallpars()).unwrap();
+    let json_path: String = format!("{}/wallpapers.json", gen_path());
+    fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
+} 
 
 fn change(theme: &str, wallpaper_index: usize) {
     let structin = read();
@@ -159,8 +165,9 @@ fn main() {
            let config = read();
            apply(config);
        }
-       Commands::Config => {
+       Commands::Init => {
            gen_config();
+           gen_walllist();
            println!("Generated Basic Config");
        }
     }
