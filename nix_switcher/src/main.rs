@@ -37,6 +37,11 @@ fn gen_path() -> String {
     format!("{}/.config/rice", home)
 }
 
+fn gen_home() -> String {
+    let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
+    home
+}
+
 fn gen_config() {
     let themedir = format!("{}/themes", gen_path());
     let wallpaperdir = format!("{}/wallpaper", gen_path());
@@ -64,12 +69,8 @@ fn change(theme: &str, wallpaper_index: usize) {
 }
 
 fn apply(structin: Data) {
-    let selected_path: String = format!("{}/themes/{}/apply_theme.sh", gen_path(), structin.theme);
     let wallpapercommand: String = format!(",{}", structin.wallpaper);
-    Command::new("sh")
-        .arg(&selected_path)
-        .spawn()
-        .expect("Command konnte nicht ausgeführt werden");
+    replace_pointer(&structin);
     Command::new("hyprctl")
         .args(["hyprpaper", "preload", &structin.wallpaper])
         .status()
@@ -86,6 +87,34 @@ fn apply(structin: Data) {
         .args(["-SIGUSR1", ".kitty-wrapped"])
         .status()
         .expect("Konnte Kitty nicht neuladen");
+}
+
+fn replace_pointer(theme: &Data) {
+    let themedir_path: String = read().themedir;
+    let hyprland_path: String = format!("{}/{}/hyprland/color.conf", &themedir_path, &theme.theme);
+    let rofi_path: String = format!("{}/{}/rofi/current.rasi", &themedir_path, &theme.theme);
+    let kitty_path: String = format!("{}/{}/kitty/current.conf", &themedir_path, &theme.theme);
+    let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
+    let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_home());
+    let rofi_base: String = format!("{}/.config/rofi/current.rasi", gen_home());
+    let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_home());
+    let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_home());
+    Command::new("cp")
+        .args([&hyprland_path, &hyprland_base])
+        .status()
+        .expect("Konnte den Hyprland Pointer nicht ersetzten");
+    Command::new("cp")
+        .args([&rofi_path, &rofi_base])
+        .status()
+        .expect("Konnte den Rofi Pointer nicht ersetzten");
+    Command::new("cp")
+        .args([&kitty_path, &kitty_base])
+        .status()
+        .expect("Konnte den Kitty Pointer nicht ersetzten");
+    Command::new("cp")
+        .args([&quickshell_path, &quickshell_base])
+        .status()
+        .expect("Konnte den Quickshell Pointer nicht ersetzten");
 }
 
 fn read() -> Data {
