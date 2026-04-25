@@ -92,13 +92,14 @@ fn apply(structin: Data) {
 fn replace_pointer(theme: &Data) {
     let themedir_path: String = read().themedir;
     let hyprland_path: String = format!("{}/{}/hyprland/color.conf", &themedir_path, &theme.theme);
-    let rofi_path: String = format!("{}/{}/rofi/current.rasi", &themedir_path, &theme.theme);
-    let kitty_path: String = format!("{}/{}/kitty/current.conf", &themedir_path, &theme.theme);
-    let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
     let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_home());
+    let rofi_path: String = format!("{}/{}/rofi/current.rasi", &themedir_path, &theme.theme);
     let rofi_base: String = format!("{}/.config/rofi/current.rasi", gen_home());
+    let kitty_path: String = format!("{}/{}/kitty/current.conf", &themedir_path, &theme.theme);
     let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_home());
+    let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
     let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_home());
+    let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_home());
     Command::new("cp")
         .args([&hyprland_path, &hyprland_base])
         .status()
@@ -115,6 +116,10 @@ fn replace_pointer(theme: &Data) {
         .args([&quickshell_path, &quickshell_base])
         .status()
         .expect("Konnte den Quickshell Pointer nicht ersetzten");
+    Command::new("touch")
+        .arg(&quickshell_touch)
+        .status()
+        .expect("Konnte keinen neuen Zeitstempel in der Shell.qml erstellen");
 }
 
 fn read() -> Data {
