@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use clap::{Parser, Subcommand};
 use std::fs;
 use std::env;
+use std::collections::HashMap;
 use std::process::Command;
 use walkdir::WalkDir;
 
@@ -14,13 +15,17 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
-enum Commands{
+enum Commands {
     Set {
         theme: String,
         wallpaper_index: usize,
     },
     Apply,
     Init,
+    Link {
+        wallpaper_index: usize,
+        themes: Vec<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -32,35 +37,58 @@ struct Data {
 
 }
 
-fn gen_path() -> String {
-    let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
-    format!("{}/.config/rice", home)
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+    wallpaper: HashMap<String, Wallpaperconfig>,
 }
 
-fn gen_home() -> String {
-    let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
-    home
+#[derive(Serialize, Deserialize, Debug)]
+struct Wallpaperconfig {
+    themes: Vec<String>,
 }
 
-fn gen_config() {
-    let themedir = format!("{}/themes", gen_path());
-    let wallpaperdir = format!("{}/wallpaper", gen_path());
+fn gen_path(option: u8) -> String {
+    let home = env::var("HOME").expect("Konnte die Hoemvariable nicht finden");
+    let option1: String = format!("{}/.config/rice", home);
+    if option == 1 {
+        return home
+    } else if option == 2 {
+        return option1
+    } else {
+        panic!("Keine Option");
+    }
+}
+
+fn gen_file_config() {
+    let themedir = format!("{}/themes", gen_path(2));
+    let wallpaperdir = format!("{}/wallpaper", gen_path(2));
+    let mut wallpaper_map: HashMap<String, Wallpaperconfig> = HashMap::new();
     let basic_conf = Data {
         theme: String::from("dracula"),
         themedir: themedir,
         wallpaper: String::from("dracula"),
         wallpaperdir: wallpaperdir,
     };
+    for i in pars_wall() {
+        wallpaper_map.insert(
+            i,
+            Wallpaperconfig {
+                themes: vec![],
+            },
+        );
+    };
+    let config_out = Config {
+        wallpaper: wallpaper_map,
+    };
     let json_string = serde_json::to_string_pretty(&basic_conf).unwrap();
-    let json_path: String = format!("{}/switcher.json", gen_path());
+    let json_path: String = format!("{}/switcher.json", gen_path(2));
     fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
+    println!("New File in: {}", &json_path);
+    let json_string_wallpaper = serde_json::to_string_pretty(&config_out).unwrap();
+    let json_path_wallpaper: String = format!("{}/wallpapers.json", gen_path(2));
+    fs::write(&json_path_wallpaper, &json_string_wallpaper).expect("Konnte Datei nicht schreiben");
+    println!("New File in: {}", &json_path_wallpaper);
 }
-
-fn gen_walllist() {
-    let json_string = serde_json::to_string_pretty(&wallpars()).unwrap();
-    let json_path: String = format!("{}/wallpapers.json", gen_path());
-    fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
-} 
 
 fn change(theme: &str, wallpaper_index: usize) {
     let structin = read();
@@ -70,7 +98,7 @@ fn change(theme: &str, wallpaper_index: usize) {
         ..structin
     };
     let json_string = serde_json::to_string_pretty(&structout).unwrap();
-    let json_path: String = format!("{}/switcher.json", gen_path());
+    let json_path: String = format!("{}/switcher.json", gen_path(2));
     fs::write(&json_path, &json_string).expect("Konnte Datei nicht schreiben");
 }
 
@@ -95,17 +123,38 @@ fn apply(structin: Data) {
         .expect("Konnte Kitty nicht neuladen");
 }
 
+fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
+    let mut config = pars_config();
+    let target_wallpaper: String = wallpath(wallpaperindex);
+    for i in themes {
+        if let Some(wallpaper_info) = config.wallpaper.get_mut(&target_wallpaper) {
+            let new_theme = i.to_string();
+            if !wallpaper_info.themes.contains(&new_theme) {
+                wallpaper_info.themes.push(new_theme);
+            } else {
+                println!("Das Theme({}) ist schon mit dem Theme({}) verknüpft", &target_wallpaper, &new_theme);
+            }
+        } else {
+            println!("Konnte das Wallpaper({}) in wallpapers.json nicht finden", &target_wallpaper);
+            return;
+        }
+    }
+    let file_path: String = format!("{}/wallpapers.json", gen_path(2));
+    let json_string = serde_json::to_string_pretty(&config).unwrap();
+    fs::write(&file_path, &json_string).expect("Konnte wallpapers.json nicht überschreiben");
+}
+
 fn replace_pointer(theme: &Data) {
     let themedir_path: String = read().themedir;
     let hyprland_path: String = format!("{}/{}/hyprland/color.conf", &themedir_path, &theme.theme);
-    let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_home());
+    let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_path(1));
     let rofi_path: String = format!("{}/{}/rofi/current.rasi", &themedir_path, &theme.theme);
-    let rofi_base: String = format!("{}/.config/rofi/current.rasi", gen_home());
+    let rofi_base: String = format!("{}/.config/rofi/current.rasi", gen_path(1));
     let kitty_path: String = format!("{}/{}/kitty/current.conf", &themedir_path, &theme.theme);
-    let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_home());
+    let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_path(1));
     let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
-    let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_home());
-    let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_home());
+    let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_path(1));
+    let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_path(1));
     Command::new("cp")
         .args([&hyprland_path, &hyprland_base])
         .status()
@@ -129,14 +178,14 @@ fn replace_pointer(theme: &Data) {
 }
 
 fn read() -> Data {
-    let json_path: String = format!("{}/switcher.json", gen_path());
+    let json_path: String = format!("{}/switcher.json", gen_path(2));
     let file_content = fs::read_to_string(&json_path).expect("Datei konnte nicht gelesen werden");
     let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
     loaded_config
 }
 
-fn wallpars() -> Vec<String> {
-    let folder_path: String = format!("{}/wallpaper", gen_path());
+fn pars_wall() -> Vec<String> {
+    let folder_path: String = format!("{}/wallpaper", gen_path(2));
     WalkDir::new(&folder_path)
         .into_iter()
         .filter_map(|entry| entry.ok())
@@ -148,11 +197,20 @@ fn wallpars() -> Vec<String> {
 }
 
 fn wallpath(index: usize) -> String {
-    let wallpaper = wallpars();
+    let wallpaper = pars_wall();
     if index >=wallpaper.len() {
         panic!("So viele Wallpaper stehen nicht zur verfügung. Das Maximum sind: {}", wallpaper.len() - 1);
     }
     wallpaper[index].clone()
+}
+
+fn pars_config() -> Config {
+    let file: String = format!("{}/wallpapers.json", gen_path(2));
+    let file_content = fs::read_to_string(&file)
+        .expect("Wallpapers.json konnte nicht geparst werden");
+    let loaded_config: Config = serde_json::from_str(&file_content)
+        .expect("Konnte Wallpapers.json nicht konvertieren");
+    loaded_config
 }
 
 fn main() {
@@ -166,9 +224,11 @@ fn main() {
            apply(config);
        }
        Commands::Init => {
-           gen_config();
-           gen_walllist();
+           gen_file_config();
            println!("Generated Basic Config");
+       }
+       Commands::Link { wallpaper_index, themes } => {
+           link_theme_wallpaper(*wallpaper_index, themes.clone());
        }
     }
 }
