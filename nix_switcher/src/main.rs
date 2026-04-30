@@ -22,6 +22,10 @@ enum Commands {
     },
     Apply,
     Init,
+    Link {
+        wallpaper_index: usize,
+        theme: Vec<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -44,7 +48,7 @@ struct Wallpapers {
 }
 
 fn gen_path(option: u8) -> String {
-    let home = env::var("HOME").expect("Konnte die Hoemvariable nicht finden");
+    let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
     let option1: String = format!("{}/.config/rice", home);
     let option2: String = format!("{}/nix-switcher", option1);
     if option == 1 {
@@ -142,12 +146,16 @@ fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     let mut config = pars_links();
     let target_wallpaper: String = wallpath(wallpaperindex);
     for i in themes {
-        let Some(wallpaper_info) = config.theme.get_mut(&target_wallpaper);
-        if let Some(wallpaper_info) = config.theme.get_mut(i) {
-            if !config.the
-
-        let new_theme = i.to_string();
-        wallpaper_info.themes.push(new_theme);
+        if let Some(wallpaper_info) = config.theme.get_mut(&i) {
+            if wallpaper_info.wallpapers.contains(&target_wallpaper) {
+                println!("Info: Wallpaper ist schon im Theme '{}' verlinkt.", i);
+            } else {
+                wallpaper_info.wallpapers.push(target_wallpaper.clone());
+                println!("Erfolg: Wallpaper wurde mit '{}' verknüpft!", i);
+            }
+        } else {
+            println!("Fehler: Das Theme '{}' existiert in der config nicht.", i);
+        }
     }
     let file_path: String = format!("{}/links.json", gen_path(3));
     let json_string = serde_json::to_string_pretty(&config).unwrap();
@@ -250,6 +258,9 @@ fn main() {
        Commands::Init => {
            gen_file_init();
            println!("Generated Basic Config");
+       }
+       Commands::Link { wallpaper_index, theme } => {
+           link_theme_wallpaper(*wallpaper_index, theme.clone());
        }
     }
 }
