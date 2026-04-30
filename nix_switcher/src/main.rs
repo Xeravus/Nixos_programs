@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use clap::{Parser, Subcommand};
 use std::fs;
+use std::fs::OpenOptions;
 use std::env;
 use std::collections::HashMap;
 use std::process::Command;
@@ -174,10 +175,10 @@ fn replace_pointer(theme: &Data) {
     fs::copy(&rofi_path, &rofi_base).expect("Konnte den Rofi Pointer nicht ersetzen");
     fs::copy(&kitty_path, &kitty_base).expect("Konnte den Kitty Pointer nicht ersetzen");
     fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
-    Command::new("touch")
-        .arg(&quickshell_touch)
-        .status()
-        .expect("Konnte keinen neuen Zeitstempel in der Shell.qml erstellen");
+    OpenOptions::new()
+        .write(true)
+        .open(&quickshell_touch)
+        .expect("Quickshell konnte nicht getoucht werden");
 }
 
 fn pars_config() -> Data {
