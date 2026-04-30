@@ -140,6 +140,21 @@ fn apply(structin: Data) {
         .status()
         .expect("Konnte Kitty nicht neuladen");
 }
+
+fn set_r_paper(wallpaperindex: usize) -> String {
+    let config = pars_links();
+    let current_theme = pars_config().theme;
+    if let Some(wallpaper_info) = config.theme.get(&current_theme) {
+        if wallpaperindex < wallpaper_info.wallpapers.len() {
+            return wallpaper_info.wallpapers[wallpaperindex].clone();
+        } else {
+            panic!("So viele Wallpaper sind für dieses Theme nicht verlinkt");
+        }
+    } else {
+        panic!("Das Theme '{}' wurde in links.json nicht gefunden", current_theme);
+    }
+}
+
 fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     let mut config = pars_links();
     let target_wallpaper: String = wallpath(wallpaperindex);
