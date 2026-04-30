@@ -51,14 +51,11 @@ fn gen_path(option: u8) -> String {
     let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
     let option1: String = format!("{}/.config/rice", home);
     let option2: String = format!("{}/nix-switcher", option1);
-    if option == 1 {
-        return home
-    } else if option == 2 {
-        return option1
-    } else if option == 3 {
-        return option2
-    } else {
-        panic!("Keine Option");
+    match option {
+        1 => home,
+        2 => option1,
+        3 => option2,
+        _ => panic!("Keine Option, für diesen Pfad"),
     }
 }
 
