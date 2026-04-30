@@ -173,22 +173,10 @@ fn replace_pointer(theme: &Data) {
     let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
     let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_path(1));
     let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_path(1));
-    Command::new("cp")
-        .args([&hyprland_path, &hyprland_base])
-        .status()
-        .expect("Konnte den Hyprland Pointer nicht ersetzten");
-    Command::new("cp")
-        .args([&rofi_path, &rofi_base])
-        .status()
-        .expect("Konnte den Rofi Pointer nicht ersetzten");
-    Command::new("cp")
-        .args([&kitty_path, &kitty_base])
-        .status()
-        .expect("Konnte den Kitty Pointer nicht ersetzten");
-    Command::new("cp")
-        .args([&quickshell_path, &quickshell_base])
-        .status()
-        .expect("Konnte den Quickshell Pointer nicht ersetzten");
+    fs::copy(&hyprland_path, &hyprland_base).expect("Konnte den Hyprland Pointer nicht ersetzen");
+    fs::copy(&rofi_path, &rofi_base).expect("Konnte den Rofi Pointer nicht ersetzen");
+    fs::copy(&kitty_path, &kitty_base).expect("Konnte den Kitty Pointer nicht ersetzen");
+    fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
     Command::new("touch")
         .arg(&quickshell_touch)
         .status()
