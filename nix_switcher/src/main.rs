@@ -138,28 +138,21 @@ fn apply(structin: Data) {
         .status()
         .expect("Konnte Kitty nicht neuladen");
 }
-/*
 fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
-    let mut config = pars_config();
+    let mut config = pars_links();
     let target_wallpaper: String = wallpath(wallpaperindex);
     for i in themes {
-        if let Some(wallpaper_info) = config.wallpaper.get_mut(&target_wallpaper) {
-            let new_theme = i.to_string();
-            if !wallpaper_info.themes.contains(&new_theme) {
-                wallpaper_info.themes.push(new_theme);
-            } else {
-                println!("Das Theme({}) ist schon mit dem Theme({}) verknüpft", &target_wallpaper, &new_theme);
-            }
-        } else {
-            println!("Konnte das Wallpaper({}) in wallpapers.json nicht finden", &target_wallpaper);
-            return;
-        }
+        let Some(wallpaper_info) = config.theme.get_mut(&target_wallpaper);
+        if let Some(wallpaper_info) = config.theme.get_mut(i) {
+            if !config.the
+
+        let new_theme = i.to_string();
+        wallpaper_info.themes.push(new_theme);
     }
-    let file_path: String = format!("{}/wallpapers.json", gen_path(2));
+    let file_path: String = format!("{}/links.json", gen_path(3));
     let json_string = serde_json::to_string_pretty(&config).unwrap();
     fs::write(&file_path, &json_string).expect("Konnte wallpapers.json nicht überschreiben");
 }
-*/
 
 fn replace_pointer(theme: &Data) {
     let themedir_path: String = pars_config().themedir;
