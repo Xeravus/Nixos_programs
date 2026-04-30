@@ -191,6 +191,7 @@ fn pars_config() -> Data {
 fn pars_wall() -> Vec<String> {
     let folder_path: String = format!("{}/wallpaper", gen_path(2));
     WalkDir::new(&folder_path)
+        .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
