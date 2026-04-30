@@ -200,8 +200,15 @@ fn pars_wall() -> Vec<String> {
         .collect()
 }
 
+fn pars_wallfile() -> Vec<String> {
+    let file: String = format!("{}/wallpaper.json", gen_path(3));
+    let file_content = fs::read_to_string(&file).expect("Konnte Wallpaper.json nicht parsen");
+    let loaded_content: Vec<String> = serde_json::from_str(&file_content).expect("Konnte Wallpaper.json nicht formatieren");
+    loaded_content
+}
+
 fn wallpath(index: usize) -> String {
-    let wallpaper = pars_wall();
+    let wallpaper = pars_wallfile();
     if index >=wallpaper.len() {
         panic!("So viele Wallpaper stehen nicht zur verfügung. Das Maximum sind: {}", wallpaper.len() - 1);
     }
