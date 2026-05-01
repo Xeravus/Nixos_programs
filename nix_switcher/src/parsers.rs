@@ -1,5 +1,4 @@
-mod generator;
-
+use crate::generator::*;
 use std::fs;
 use walkdir::WalkDir;
 

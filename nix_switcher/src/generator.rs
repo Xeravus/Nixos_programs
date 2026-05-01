@@ -1,5 +1,4 @@
-mod parsers;
-
+use crate::parsers::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::env;

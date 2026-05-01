@@ -1,7 +1,8 @@
 #[warn(unused_imports)]
-mod generator;
-use generator::*;
+use crate::generator::*;
+use crate::parsers::*;
 use serde::*;
+use std::fs;
 
 pub fn set_global(theme: &str, index: usize) -> Data {
     let structin = pars_config();
@@ -17,10 +18,10 @@ pub fn set_relativ(theme: &str, index: usize) -> Data {
     let structin = pars_config();
     let structout = Data {
         theme: String::from(theme),
-        wallpaper: pars_rwallpath(&index, &theme),
+        wallpaper: pars_rwallpath(index, theme.to_string()),
         ..structin
     };
-    strouctout
+    structout
 }
 
 pub fn set_theme(theme: &str) -> Data {
@@ -35,14 +36,14 @@ pub fn set_theme(theme: &str) -> Data {
 pub fn set_wall(index: usize) -> Data {
     let structin = pars_config();
     let structout = Data {
-        wallpaper: pars_rwallpath(&index, &structin.theme),
+        wallpaper: pars_rwallpath(index, structin.theme.clone()),
         ..structin
     };
     structout
 }
 
 pub fn change(structin: Data) {
-    let json_string = serde.json::to_string_pretty(&structin).unwrap();
+    let json_string = serde_json::to_string_pretty(&structin).unwrap();
     let json_path: String = format!("{}/config.json", gen_path(3));
     fs::write(&json_path, &json_string).expect("Konnte config.json nicht beschreiben");
 }
