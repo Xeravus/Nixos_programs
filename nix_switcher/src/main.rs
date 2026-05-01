@@ -8,7 +8,6 @@ use set::*;
 
 use clap::{Parser, Subcommand};
 use std::fs;
-use std::fs::OpenOptions;
 use std::process::Command;
 
 
@@ -80,9 +79,9 @@ fn replace_pointer(theme: &Data) {
     fs::copy(&rofi_path, &rofi_base).expect("Konnte den Rofi Pointer nicht ersetzen");
     fs::copy(&kitty_path, &kitty_base).expect("Konnte den Kitty Pointer nicht ersetzen");
     fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
-    OpenOptions::new()
-        .write(true)
-        .open(&quickshell_touch)
+    Command::new("touch")
+        .arg(&quickshell_touch)
+        .spawn()
         .expect("Quickshell konnte nicht getoucht werden");
 }
 
