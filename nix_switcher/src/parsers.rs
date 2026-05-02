@@ -65,6 +65,7 @@ pub fn pars_themes() -> Vec<String> {
     WalkDir::new(&folder_path)
         .min_depth(1)
         .max_depth(1)
+        .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_dir())
