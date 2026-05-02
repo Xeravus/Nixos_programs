@@ -31,7 +31,7 @@ pub fn pars_wallfile() -> Vec<String> {
 }
 
 pub fn pars_gwallpath(index: usize) -> String {
-    let wallpaper = pars_wallpaper();
+    let wallpaper = pars_wallfile();
     if index >=wallpaper.len() {
         panic!("So viele Wallpaper stehen nicht zur verfügung. Das Maximum sind: {}", wallpaper.len() - 1);
     }
