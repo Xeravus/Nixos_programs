@@ -37,6 +37,7 @@ enum Commands {
     },
     Apply,
     Init,
+    Genwall,
     Link {
         index: usize,
         theme: Vec<String>,
@@ -111,6 +112,9 @@ fn main() {
         Commands::Init => {
             gen_file_init();
             println!("Generated Basic Config");
+        }
+        Commands::Genwall => {
+            gen_file_wallpaper();
         }
         Commands::Link { index, theme } => {
             link_theme_wallpaper(*index, theme.clone());
