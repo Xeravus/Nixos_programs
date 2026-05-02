@@ -91,8 +91,9 @@ fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     let target_wallpaper: String = pars_gwallpath(wallpaperindex);
     for i in themes {
         if let Some(wallpaper_info) = config.theme.get_mut(&i) {
-            if wallpaper_info.wallpapers.contains(&target_wallpaper) {
-                println!("Info: Wallpaper ist schon im Theme '{}' verlinkt.", i);
+            if let Some(index) = wallpaper_info.wallpapers.iter().position(|x| *x == target_wallpaper) {
+                wallpaper_info.wallpapers.remove(index);
+                println!("Info: Wallpaper wurde aus dem Theme '{}' entfernt (Unlinked).", i);
             } else {
                 wallpaper_info.wallpapers.push(target_wallpaper.clone());
                 println!("Erfolg: Wallpaper wurde mit '{}' verknüpft!", i);
