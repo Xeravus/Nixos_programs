@@ -128,6 +128,7 @@ fn main() {
         }
         Commands::Settheme { theme } => {
             change(set_theme(&theme));
+            change(set_relativ(&theme, 0));
         }
         Commands::Setwall { index } => {
             change(set_wall(*index));
