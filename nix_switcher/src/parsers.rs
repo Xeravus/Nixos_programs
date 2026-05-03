@@ -10,6 +10,18 @@ pub fn pars_config() -> Data {
     loaded_config
 }
 
+pub fn pars_kitty() -> Vec<String> {
+    WalkDir::new(gen_path(4))
+        .sort_by_file_name()
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .filter_map(|entry| {
+            entry.path().file_stem().and_then(|n| n.to_str()).map(|s| s.to_string())
+        })
+        .collect()
+}
+
 pub fn pars_wallpaper() -> Vec<String> {
     let folder_path: String = format!("{}/wallpaper", gen_path(2));
     WalkDir::new(&folder_path)

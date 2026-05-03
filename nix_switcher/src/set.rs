@@ -42,6 +42,15 @@ pub fn set_wall(index: usize) -> Data {
     structout
 }
 
+pub fn set_kittytheme(theme: String) -> Data {
+    let structin = pars_config();
+    let structout = Data {
+        kittytheme: String::from(theme),
+        ..structin
+    };
+    structout
+}
+
 pub fn change(structin: Data) {
     let json_string = serde_json::to_string_pretty(&structin).unwrap();
     let json_path: String = format!("{}/config.json", gen_path(3));

@@ -35,6 +35,9 @@ enum Commands {
     Setwall {
         index: usize,
     },
+    Kittytheme {
+        theme: String,
+    },
     Apply,
     Init,
     Genwall,
@@ -59,6 +62,7 @@ fn apply(structin: Data) {
         .args(["hyprpaper", "unload", "unused"])
         .status()
         .expect("Konnte unbenutzte Wallpaper nicht entbinden");
+    replace_kitty(&structin);
     Command::new("killall")
         .args(["-SIGUSR1", ".kitty-wrapped"])
         .status()
@@ -71,22 +75,23 @@ fn replace_pointer(theme: &Data) {
     let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_path(1));
     let rofi_path: String = format!("{}/{}/rofi/current.rasi", &themedir_path, &theme.theme);
     let rofi_base: String = format!("{}/.config/rofi/current.rasi", gen_path(1));
-    let kitty_path: String = format!("{}/{}/kitty/current.conf", &themedir_path, &theme.theme);
-    let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_path(1));
     let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
     let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_path(1));
     let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_path(1));
-    let cava_path: String = format!("{}/{}/cava/config", &themedir_path, &theme.theme);
-    let cava_base: String = format!("{}/.config/cava/config", gen_path(1));
     fs::copy(&hyprland_path, &hyprland_base).expect("Konnte den Hyprland Pointer nicht ersetzen");
     fs::copy(&rofi_path, &rofi_base).expect("Konnte den Rofi Pointer nicht ersetzen");
-    fs::copy(&kitty_path, &kitty_base).expect("Konnte den Kitty Pointer nicht ersetzen");
     fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
-    fs::copy(&cava_path, &cava_base).expect("Konnte die Cava Conf nicht austauschen");
     Command::new("touch")
         .arg(&quickshell_touch)
         .spawn()
         .expect("Quickshell konnte nicht getoucht werden");
+}
+
+fn replace_kitty(theme: &Data) {
+    let themedir_path: String = pars_config().kittytheme;
+    let kitty_path: String = format!("{}/{}.conf", gen_path(4), &themedir_path);
+    let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_path(1));
+    fs::copy(&kitty_path, &kitty_base).expect("Konnte Kitty nicht austauschen");
 }
 
 fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
@@ -135,6 +140,9 @@ fn main() {
         }
         Commands::Setwall { index } => {
             change(set_wall(*index));
+        }
+        Commands::Kittytheme { theme } => {
+            change(set_kittytheme((&theme).to_string()));
         }
         Commands::Apply => {
             let config = pars_config();
