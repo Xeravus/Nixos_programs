@@ -14,6 +14,7 @@ pub fn pars_wallpaper() -> Vec<String> {
     let folder_path: String = format!("{}/wallpaper", gen_path(2));
     WalkDir::new(&folder_path)
         .sort_by_file_name()
+        .contents_first(true)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
@@ -65,7 +66,6 @@ pub fn pars_themes() -> Vec<String> {
         .min_depth(1)
         .max_depth(1)
         .sort_by_file_name()
-        .contents_first(true)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_dir())
