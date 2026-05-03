@@ -23,8 +23,7 @@ pub fn pars_wallpaper() -> Vec<String> {
         .collect()
 }
 
-pub fn pars_wallfile() -> Vec<String> {
-    let file: String = format!("{}/wallpaper.json", gen_path(3));
+pub fn pars_wallfile() -> Vec<String> { let file: String = format!("{}/wallpaper.json", gen_path(3));
     let file_content = fs::read_to_string(&file).expect("Konnte Wallpaper.json nicht parsen");
     let loaded_content: Vec<String> = serde_json::from_str(&file_content).expect("Konnte Wallpaper.json nicht formatieren");
     loaded_content
@@ -66,6 +65,7 @@ pub fn pars_themes() -> Vec<String> {
         .min_depth(1)
         .max_depth(1)
         .sort_by_file_name()
+        .contents_first(true)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_dir())
