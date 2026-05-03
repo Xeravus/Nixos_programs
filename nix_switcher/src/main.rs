@@ -35,7 +35,7 @@ enum Commands {
     Setwall {
         index: usize,
     },
-    Kittytheme {
+    Setkitty {
         theme: String,
     },
     Apply,
@@ -141,7 +141,7 @@ fn main() {
         Commands::Setwall { index } => {
             change(set_wall(*index));
         }
-        Commands::Kittytheme { theme } => {
+        Commands::Setkitty { theme } => {
             change(set_kittytheme((&theme).to_string()));
         }
         Commands::Apply => {
