@@ -76,10 +76,13 @@ fn replace_pointer(theme: &Data) {
     let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
     let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_path(1));
     let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_path(1));
+    let cava_path: String = format!("{}/{}/cava/config", &themedir_path, &theme.theme);
+    let cava_base: String = format!("{}/.config/cava/config", gen_path(1));
     fs::copy(&hyprland_path, &hyprland_base).expect("Konnte den Hyprland Pointer nicht ersetzen");
     fs::copy(&rofi_path, &rofi_base).expect("Konnte den Rofi Pointer nicht ersetzen");
     fs::copy(&kitty_path, &kitty_base).expect("Konnte den Kitty Pointer nicht ersetzen");
     fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
+    fs::copy(&cava_path, &cava_base).expect("Konnte die Cava Conf nicht austauschen");
     Command::new("touch")
         .arg(&quickshell_touch)
         .spawn()
