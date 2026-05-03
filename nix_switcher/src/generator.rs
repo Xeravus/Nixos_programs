@@ -2,7 +2,7 @@ use crate::parsers::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::env;
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Data {
@@ -15,7 +15,7 @@ pub struct Data {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub theme: HashMap<String, Wallpapers>,
+    pub theme: IndexMap<String, Wallpapers>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -57,7 +57,7 @@ pub fn gen_file_config() {
 }
 
 pub fn gen_file_links() {
-    let mut theme_map: HashMap<String, Wallpapers> = HashMap::new();
+    let mut theme_map: IndexMap<String, Wallpapers> = IndexMap::new();
     for i in pars_themes() {
         theme_map.insert(
             i,
