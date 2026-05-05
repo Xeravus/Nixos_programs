@@ -73,13 +73,10 @@ fn replace_pointer(theme: &Data) {
     let themedir_path: String = pars_config().themedir;
     let hyprland_path: String = format!("{}/{}/hyprland/color.conf", &themedir_path, &theme.theme);
     let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_path(1));
-    let rofi_path: String = format!("{}/{}/rofi/current.rasi", &themedir_path, &theme.theme);
-    let rofi_base: String = format!("{}/.config/rofi/current.rasi", gen_path(1));
     let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
     let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_path(1));
     let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_path(1));
     fs::copy(&hyprland_path, &hyprland_base).expect("Konnte den Hyprland Pointer nicht ersetzen");
-    fs::copy(&rofi_path, &rofi_base).expect("Konnte den Rofi Pointer nicht ersetzen");
     fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
     Command::new("touch")
         .arg(&quickshell_touch)
