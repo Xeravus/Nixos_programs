@@ -38,6 +38,7 @@ enum Commands {
     Setkitty {
         theme: String,
     },
+    Genthemes,
     Apply,
     Init,
     Genwall,
@@ -62,7 +63,7 @@ fn apply(structin: Data) {
         .args(["hyprpaper", "unload", "unused"])
         .status()
         .expect("Konnte unbenutzte Wallpaper nicht entbinden");
-    replace_kitty(&structin);
+    replace_kitty();
     Command::new("killall")
         .args(["-SIGUSR1", ".kitty-wrapped"])
         .status()
@@ -84,7 +85,7 @@ fn replace_pointer(theme: &Data) {
         .expect("Quickshell konnte nicht getoucht werden");
 }
 
-fn replace_kitty(theme: &Data) {
+fn replace_kitty() {
     let themedir_path: String = pars_config().kittytheme;
     let kitty_path: String = format!("{}/{}.conf", gen_path(4), &themedir_path);
     let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_path(1));
@@ -97,8 +98,7 @@ fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     for i in themes {
         if let Some(wallpaper_info) = config.theme.get_mut(&i) {
             if let Some(index) = wallpaper_info.wallpapers.iter().position(|x| *x == target_wallpaper) {
-                wallpaper_info.wallpapers.remove(index);
-                println!("Info: Wallpaper wurde aus dem Theme '{}' entfernt (Unlinked).", i);
+                wallpaper_info.wallpapers.remove(index); println!("Info: Wallpaper wurde aus dem Theme '{}' entfernt (Unlinked).", i);
             } else {
                 wallpaper_info.wallpapers.push(target_wallpaper.clone());
                 println!("Erfolg: Wallpaper wurde mit '{}' verknüpft!", i);
@@ -140,6 +140,9 @@ fn main() {
         }
         Commands::Setkitty { theme } => {
             change(set_kittytheme((&theme).to_string()));
+        }
+        Commands::Genthemes => {
+            gen_themes_all();
         }
         Commands::Apply => {
             let config = pars_config();

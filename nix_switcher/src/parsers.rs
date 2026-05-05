@@ -1,13 +1,49 @@
 use crate::generator::*;
 use std::fs;
+use std::io;
 use walkdir::WalkDir;
-
+use serde::Deserialize;
 
 pub fn pars_config() -> Data {
     let json_path: String = format!("{}/config.json", gen_path(3));
     let file_content = fs::read_to_string(&json_path).expect("Datei konnte nicht gelesen werden");
     let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
     loaded_config
+}
+
+pub fn pars_themecolor(file: String) -> Colors {
+    let content: String = fs::read_to_string(file).expect("Konnte die Theme Datei nicht lesen");
+    let colors: Colors = serde_json::from_str(&content).expect("JSON-Format der Datei ist ungültig");
+    colors
+}
+
+pub fn pars_themes() -> Vec<String> {
+    let folder_path: String = format!("{}/themes", gen_path(3));
+    WalkDir::new(&folder_path)
+        .min_depth(1)
+        .max_depth(1)
+        .sort_by_file_name()
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_dir())
+        .filter_map(|entry| {
+            entry.path().file_name().and_then(|n| n.to_str()).map(|s| s.to_string())
+        })
+    .collect()
+}
+
+pub fn pars_themefiles() -> Vec<String> {
+    let folder_path: String = format!("{}/themes/", gen_path(3));
+    WalkDir::new(&folder_path)
+        .sort_by_file_name()
+        .contents_first(true)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .filter_map(|entry| {
+            entry.path().to_str().map(|s| s.to_string())
+        })
+        .collect()
 }
 
 pub fn pars_kitty() -> Vec<String> {
@@ -72,18 +108,4 @@ pub fn pars_rwallpath(index: usize, theme: String) -> String {
     }
 }
 
-pub fn pars_themes() -> Vec<String> {
-    let folder_path: String = format!("{}/themes", gen_path(2));
-    WalkDir::new(&folder_path)
-        .min_depth(1)
-        .max_depth(1)
-        .sort_by_file_name()
-        .into_iter()
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().is_dir())
-        .filter_map(|entry| {
-            entry.path().file_name().and_then(|n| n.to_str()).map(|s| s.to_string())
-        })
-    .collect()
-}
 
