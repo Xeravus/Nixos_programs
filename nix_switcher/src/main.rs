@@ -41,6 +41,7 @@ enum Commands {
     Setkitty {
         theme: String,
     },
+    Reload,
     Genthemes,
     Cleanthemes, 
     Apply,
@@ -144,6 +145,10 @@ fn main() {
         }
         Commands::Setkitty { theme } => {
             change(set_kittytheme((&theme).to_string()));
+        }
+        Commands::Reload => {
+            cl_themedir();
+            gen_themes_all();
         }
         Commands::Genthemes => {
             gen_themes_all();
