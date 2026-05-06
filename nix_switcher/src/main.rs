@@ -1,15 +1,18 @@
+#![allow(unused_imports)]
+
 mod parsers;
 mod generator;
 mod set;
+mod clean;
 
 use parsers::*;
 use generator::*;
 use set::*;
+use clean::*;
 
 use clap::{Parser, Subcommand};
 use std::fs;
 use std::process::Command;
-
 
 #[derive(Parser)]
 #[command(name = "nix-switcher")]
@@ -39,6 +42,7 @@ enum Commands {
         theme: String,
     },
     Genthemes,
+    Cleanthemes, 
     Apply,
     Init,
     Genwall,
@@ -143,6 +147,9 @@ fn main() {
         }
         Commands::Genthemes => {
             gen_themes_all();
+        }
+        Commands::Cleanthemes => {
+            cl_themedir();
         }
         Commands::Apply => {
             let config = pars_config();

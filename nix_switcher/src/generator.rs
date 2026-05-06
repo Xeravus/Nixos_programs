@@ -59,7 +59,7 @@ pub fn gen_file_init() {
 
 pub fn gen_file_config() {
     let themedir = format!("{}/themes", gen_path(3));
-    let wallpaperdir = format!("{}/wallpaper", gen_path(3));
+    let wallpaperdir = format!("{}/wallpaper", gen_path(2));
     let templatedir = format!("{}/template", gen_path(3));
     let basic_conf = Data {
         theme: String::from("dracula"),
@@ -113,6 +113,7 @@ pub fn gen_theme(hexcodes: &Colors, themename: &str) {
     let hl_in: String = format!("{}/hyprland_template.conf", pars_config().templatedir);
     let qs_out: String = format!("{}/{}/quickshell_template.qml", gen_path(5), themename);
     let hl_out: String = format!("{}/{}/hyprland_template.conf", gen_path(5), themename);
+    let path: String = format!("{}/{}", gen_path(5), themename);
     let in_paths: Vec<String> = vec![ qs_in, hl_in ];
     let out_paths: Vec<String> = vec![ qs_out, hl_out ];
     for (in_p, out_p) in in_paths.iter().zip(out_paths.iter()) {
@@ -125,6 +126,7 @@ pub fn gen_theme(hexcodes: &Colors, themename: &str) {
             .replace("varac0", &hexcodes.ac0)
             .replace("varac1", &hexcodes.ac1)
             .replace("varac2", &hexcodes.ac2);
+        fs::create_dir(&path);
         fs::write(out_p, out_content).expect("Fehler beim schreiben der Templates");
         println!("Erfolgreich Template Gemacht: {}", in_p);
     }
