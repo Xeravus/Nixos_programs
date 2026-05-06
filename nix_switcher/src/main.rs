@@ -13,6 +13,7 @@ use clean::*;
 use clap::{Parser, Subcommand};
 use std::fs;
 use std::process::Command;
+use std::path::*; 
 
 #[derive(Parser)]
 #[command(name = "nix-switcher")]
@@ -77,11 +78,11 @@ fn apply(structin: Data) {
 
 fn replace_pointer(theme: &Data) {
     let themedir_path: String = pars_config().themedir;
-    let hyprland_path: String = format!("{}/{}/hyprland/color.conf", &themedir_path, &theme.theme);
-    let hyprland_base: String = format!("{}/.config/hypr/color.conf", gen_path(1));
-    let quickshell_path: String = format!("{}/{}/quickshell/current.qml", &themedir_path, &theme.theme);
-    let quickshell_base: String = format!("{}/.config/quickshell/color/current.qml", gen_path(1));
-    let quickshell_touch: String = format!("{}/.config/quickshell/shell.qml", gen_path(1));
+    let hyprland_path: String = PathBuf::from(gen_path(PathType::Themes)).join(&theme.theme).join("hyprland_template.conf").to_str().unwrap().to_string();
+    let hyprland_base: String = PathBuf::from(gen_path(PathType::Config)).join("hypr").join("color.conf").to_str().unwrap().to_string();
+    let quickshell_path: String = PathBuf::from(gen_path(PathType::Themes)).join(&theme.theme).join("quickshell_template.qml").to_str().unwrap().to_string();
+    let quickshell_base: String = PathBuf::from(gen_path(PathType::Config)).join("quickshell").join("color").join("current.qml").to_str().unwrap().to_string();
+    let quickshell_touch: String = PathBuf::from(gen_path(PathType::Config)).join("quickshell").join("shell.qml").to_str().unwrap().to_string();
     fs::copy(&hyprland_path, &hyprland_base).expect("Konnte den Hyprland Pointer nicht ersetzen");
     fs::copy(&quickshell_path, &quickshell_base).expect("Konnte den Quickshell Pointer nicht ersetzen");
     Command::new("touch")
@@ -92,8 +93,8 @@ fn replace_pointer(theme: &Data) {
 
 fn replace_kitty() {
     let themedir_path: String = pars_config().kittytheme;
-    let kitty_path: String = format!("{}/{}.conf", gen_path(4), &themedir_path);
-    let kitty_base: String = format!("{}/.config/kitty/current.conf", gen_path(1));
+    let kitty_path: String = format!("{}/{}.conf", gen_path(PathType::Kittythemes), &themedir_path);
+    let kitty_base = PathBuf::from(gen_path(PathType::Config)).join("kitty").join("current.conf").to_str().unwrap().to_string();
     fs::copy(&kitty_path, &kitty_base).expect("Konnte Kitty nicht austauschen");
 }
 
@@ -112,7 +113,7 @@ fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
             println!("Fehler: Das Theme '{}' existiert in der config nicht.", i);
         }
     }
-    let file_path: String = format!("{}/links.json", gen_path(3));
+    let file_path = PathBuf::from(gen_path(PathType::Nixswitcher)).join("links.json").to_str().unwrap().to_string();
     let json_string = serde_json::to_string_pretty(&config).unwrap();
     fs::write(&file_path, &json_string).expect("Konnte wallpapers.json nicht überschreiben");
 }

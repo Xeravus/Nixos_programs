@@ -3,9 +3,10 @@ use std::fs;
 use std::io;
 use walkdir::WalkDir;
 use serde::Deserialize;
+use std::path::*; 
 
 pub fn pars_config() -> Data {
-    let json_path: String = format!("{}/config.json", gen_path(3));
+    let json_path = PathBuf::from(gen_path(PathType::Nixswitcher)).join("config.json").display().to_string();
     let file_content = fs::read_to_string(&json_path).expect("Datei konnte nicht gelesen werden");
     let loaded_config: Data = serde_json::from_str(&file_content).unwrap();
     loaded_config
@@ -18,7 +19,7 @@ pub fn pars_themecolor(file: String) -> Colors {
 }
 
 pub fn pars_themes() -> Vec<String> {
-    let folder_path: String = format!("{}/themes", gen_path(3));
+    let folder_path = PathBuf::from(gen_path(PathType::Nixswitcher)).join("themes").to_str().unwrap().to_string();
     WalkDir::new(&folder_path)
         .min_depth(1)
         .max_depth(1)
@@ -33,7 +34,7 @@ pub fn pars_themes() -> Vec<String> {
 }
 
 pub fn pars_themefiles() -> Vec<String> {
-    let folder_path: String = format!("{}/themes/", gen_path(3));
+    let folder_path = PathBuf::from(gen_path(PathType::Nixswitcher)).join("themes").to_str().unwrap().to_string();
     WalkDir::new(&folder_path)
         .sort_by_file_name()
         .contents_first(true)
@@ -47,7 +48,7 @@ pub fn pars_themefiles() -> Vec<String> {
 }
 
 pub fn pars_kitty() -> Vec<String> {
-    WalkDir::new(gen_path(4))
+    WalkDir::new(gen_path(PathType::Kittythemes))
         .sort_by_file_name()
         .into_iter()
         .filter_map(|entry| entry.ok())
@@ -59,8 +60,7 @@ pub fn pars_kitty() -> Vec<String> {
 }
 
 pub fn pars_wallpaper() -> Vec<String> {
-    let folder_path: String = format!("{}/wallpaper", gen_path(2));
-    WalkDir::new(&folder_path)
+    WalkDir::new(&pars_config().wallpaperdir)
         .sort_by_file_name()
         .contents_first(true)
         .into_iter()
@@ -72,7 +72,8 @@ pub fn pars_wallpaper() -> Vec<String> {
         .collect()
 }
 
-pub fn pars_wallfile() -> Vec<String> { let file: String = format!("{}/wallpaper.json", gen_path(3));
+pub fn pars_wallfile() -> Vec<String> { 
+    let file = PathBuf::from(gen_path(PathType::Nixswitcher)).join("wallpaper.json").display().to_string();
     let file_content = fs::read_to_string(&file).expect("Konnte Wallpaper.json nicht parsen");
     let loaded_content: Vec<String> = serde_json::from_str(&file_content).expect("Konnte Wallpaper.json nicht formatieren");
     loaded_content
@@ -87,7 +88,7 @@ pub fn pars_gwallpath(index: usize) -> String {
 }
 
 pub fn pars_links() -> Config {
-    let file: String = format!("{}/links.json", gen_path(3));
+    let file = PathBuf::from(gen_path(PathType::Nixswitcher)).join("links.json").display().to_string();
     let file_content = fs::read_to_string(&file)
         .expect("Wallpapers.json konnte nicht geparst werden");
     let loaded_config: Config = serde_json::from_str(&file_content)

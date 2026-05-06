@@ -3,6 +3,7 @@ use crate::generator::*;
 use crate::parsers::*;
 use serde::*;
 use std::fs;
+use std::path::*;
 
 pub fn set_global(theme: &str, index: usize) -> Data {
     let structin = pars_config();
@@ -53,6 +54,6 @@ pub fn set_kittytheme(theme: String) -> Data {
 
 pub fn change(structin: Data) {
     let json_string = serde_json::to_string_pretty(&structin).unwrap();
-    let json_path: String = format!("{}/config.json", gen_path(3));
+    let json_path = PathBuf::from(gen_path(PathType::Nixswitcher)).join("config.json").to_str().unwrap().to_string();
     fs::write(&json_path, &json_string).expect("Konnte config.json nicht beschreiben");
 }
