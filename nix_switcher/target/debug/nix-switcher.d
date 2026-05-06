@@ -1,1 +1,0 @@
-/home/cato/coding/rust_nix/nix_switcher/target/debug/nix-switcher: /home/cato/coding/rust_nix/nix_switcher/src/clean.rs /home/cato/coding/rust_nix/nix_switcher/src/generator.rs /home/cato/coding/rust_nix/nix_switcher/src/main.rs /home/cato/coding/rust_nix/nix_switcher/src/parsers.rs /home/cato/coding/rust_nix/nix_switcher/src/set.rs
