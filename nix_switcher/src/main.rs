@@ -166,7 +166,7 @@ fn main() {
         Commands::Reload => {
             cl_themedir();
             gen_themes_all();
-            gen_file_init_wallpaper();
+            gen_file_wallpaper();
         }
         Commands::Genthemes => {
             gen_themes_all();
