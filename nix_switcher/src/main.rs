@@ -14,6 +14,7 @@ use clap::{Parser, Subcommand};
 use std::fs;
 use std::process::Command;
 use std::path::*; 
+use notify_rust::Notification;
 
 #[derive(Parser)]
 #[command(name = "nix-switcher")]
@@ -54,7 +55,18 @@ enum Commands {
     },
 }
 
-fn apply(structin: Data) {
+pub fn notify_user(title: &str, message: &str) {
+    let fulltitle: String = format!("Nix-Switcher: {}", title);
+    let fullmessage: String = format!("Nix-Switcher {}", message);
+    let _ = Notification::new()
+        .summary(&fulltitle)
+        .body(&fullmessage)
+        .appname("Nix-Switcher")
+        .timeout(5000)
+        .show();
+}
+
+pub fn apply(structin: Data) {
     let wallpapercommand: String = format!(",{}", structin.wallpaper);
     replace_pointer(&structin);
     Command::new("hyprctl")
@@ -74,10 +86,10 @@ fn apply(structin: Data) {
         .args(["-SIGUSR1", ".kitty-wrapped"])
         .status()
         .expect("Konnte Kitty nicht neuladen");
+    notify_user("Apply", "apply");
 }
 
-fn replace_pointer(theme: &Data) {
-    let themedir_path: String = pars_config().themedir;
+pub fn replace_pointer(theme: &Data) {
     let hyprland_path: String = PathBuf::from(gen_path(PathType::Themes)).join(&theme.theme).join("hyprland_template.conf").to_str().unwrap().to_string();
     let hyprland_base: String = PathBuf::from(gen_path(PathType::Config)).join("hypr").join("color.conf").to_str().unwrap().to_string();
     let quickshell_path: String = PathBuf::from(gen_path(PathType::Themes)).join(&theme.theme).join("quickshell_template.qml").to_str().unwrap().to_string();
@@ -91,23 +103,25 @@ fn replace_pointer(theme: &Data) {
         .expect("Quickshell konnte nicht getoucht werden");
 }
 
-fn replace_kitty() {
+pub fn replace_kitty() {
     let themedir_path: String = pars_config().kittytheme;
     let kitty_path: String = format!("{}/{}.conf", gen_path(PathType::Kittythemes), &themedir_path);
     let kitty_base = PathBuf::from(gen_path(PathType::Config)).join("kitty").join("current.conf").to_str().unwrap().to_string();
     fs::copy(&kitty_path, &kitty_base).expect("Konnte Kitty nicht austauschen");
 }
 
-fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
+pub fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     let mut config = pars_links();
     let target_wallpaper: String = pars_gwallpath(wallpaperindex);
     for i in themes {
         if let Some(wallpaper_info) = config.theme.get_mut(&i) {
             if let Some(index) = wallpaper_info.wallpapers.iter().position(|x| *x == target_wallpaper) {
-                wallpaper_info.wallpapers.remove(index); println!("Info: Wallpaper wurde aus dem Theme '{}' entfernt (Unlinked).", i);
+                wallpaper_info.wallpapers.remove(index); 
+                notify_user("Wallpaper unlinked", "unlinked Wallpaper to Theme");
             } else {
                 wallpaper_info.wallpapers.push(target_wallpaper.clone());
                 println!("Erfolg: Wallpaper wurde mit '{}' verknüpft!", i);
+                notify_user("Wallpaper linked", "linked Wallpaper to Theme");
             }
         } else {
             println!("Fehler: Das Theme '{}' existiert in der config nicht.", i);
@@ -118,12 +132,14 @@ fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     fs::write(&file_path, &json_string).expect("Konnte wallpapers.json nicht überschreiben");
 }
 
+
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Init => {
             gen_file_init();
             println!("Generated Basic Config");
+            notify_user("Gen base Config", "generated basic Config");
         }
         Commands::Genwall => {
             gen_file_wallpaper();
