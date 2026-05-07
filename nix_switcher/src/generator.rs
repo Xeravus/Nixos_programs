@@ -103,6 +103,35 @@ pub fn gen_file_links() {
     println!("New File in: {}", &json_path_wallpaper);
 }
 
+pub fn update_file_links() {
+    let link_file = PathBuf::from(gen_path(PathType::Nixswitcher)).join("links.json");
+    let old_config: Option<Config> = if link_file.exists() {
+        Some(pars_links())
+    } else {
+        None
+    };
+    let mut theme_map: IndexMap<String, Wallpapers> = IndexMap::new();
+    for i in pars_themes() {
+        let mut wallpapers_to_keep = vec![];
+        if let Some(old) = &old_config {
+            if let Some(old_theme_data) = old.theme.get(&i) {
+                wallpapers_to_keep = old_theme_data.wallpapers.clone();
+            }
+        }
+        theme_map.insert(
+            i,
+            Wallpapers {
+                wallpapers: wallpapers_to_keep,
+            },
+        );
+    }
+    let config_out = Config {
+        theme: theme_map,
+    };
+    let json_string_wallpaper = serde_json::to_string_pretty(&config_out).unwrap();
+    fs::write(&link_file, &json_string_wallpaper).expect("Konnte Datei nicht schreiben");
+}
+
 pub fn gen_file_wallpaper() {
     let json_string = serde_json::to_string_pretty(&pars_wallpaper()).unwrap();
     let json_path: String = PathBuf::from(gen_path(PathType::Nixswitcher)).join("wallpaper.json").display().to_string();
