@@ -111,7 +111,7 @@ pub fn update_file_links() {
         None
     };
     let mut theme_map: IndexMap<String, Wallpapers> = IndexMap::new();
-    for i in pars_themefiles() {
+    for i in pars_themes() {
         let mut wallpapers_to_keep = vec![];
         if let Some(old) = &old_config {
             if let Some(old_theme_data) = old.theme.get(&i) {
