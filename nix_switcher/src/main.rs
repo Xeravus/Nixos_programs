@@ -67,20 +67,11 @@ pub fn notify_user(title: &str, message: &str) {
 }
 
 pub fn apply(structin: Data) {
-    let wallpapercommand: String = format!(",{}", structin.wallpaper);
     replace_pointer(&structin);
-    Command::new("hyprctl")
-        .args(["hyprpaper", "preload", &structin.wallpaper])
-        .status()
-        .expect("Konnte das Wallpaper nicht preloaden");
-    Command::new("hyprctl")
-        .args(["hyprpaper", "wallpaper", &wallpapercommand])
-        .status()
-        .expect("Konnte das Wallpaper nicht ändern");
-    Command::new("hyprctl")
-        .args(["hyprpaper", "unload", "unused"])
-        .status()
-        .expect("Konnte unbenutzte Wallpaper nicht entbinden");
+    Command::new("swww")
+        .args(["img", &structin.wallpaper, "--transition-type grow", "--transition-pos 0.5,0.5", "--transition-step 90", "--transition-fps 60"])
+        .spawn()
+        .expect("SWWW Hat es nicht auf die Reihe bekommen");
     replace_kitty();
     Command::new("killall")
         .args(["-SIGUSR1", ".kitty-wrapped"])
