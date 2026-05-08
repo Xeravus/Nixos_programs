@@ -69,7 +69,7 @@ pub fn notify_user(title: &str, message: &str) {
 pub fn apply(structin: Data) {
     replace_pointer(&structin);
     Command::new("swww")
-        .args(["img", &structin.wallpaper, "--transition-type grow", "--transition-pos 0.5,0.5", "--transition-step 90", "--transition-fps 60"])
+        .args(["img", &structin.wallpaper, "--transition-type", "grow", "--transition-pos", "0.5,0.5", "--transition-step", "90", "--transition-fps", "60"])
         .spawn()
         .expect("SWWW Hat es nicht auf die Reihe bekommen");
     replace_kitty();
