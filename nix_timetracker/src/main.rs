@@ -150,13 +150,13 @@ fn normalize_app_name(class: &str, title: &str) -> String {
         } else if title_lower.contains("ssh") || title_lower.contains("colmena") {
             return "server_admin".to_string();
         } else if title_lower.contains("nix") || title_lower.contains("nixos") || title_lower.contains("nh") || title_lower.contains("restituo") {
-            return "Nixen".to_string();
+            return "nixen".to_string();
         } else if title_lower.contains("hashcat") || title_lower.contains("nmap") || title_lower.contains("aircrack-ng") || title_lower.contains("wifite") || title_lower.contains("wireshark") {
-            return "Cybersecurity".to_string();
+            return "cybersecurity".to_string();
         } else if title_lower.contains("fastfetch") || title_lower.contains("nitch") {
             return "larping".to_string();
         } else {
-            return "Terminal".to_string(); 
+            return "terminal".to_string(); 
         }
     }
     class.to_string()
