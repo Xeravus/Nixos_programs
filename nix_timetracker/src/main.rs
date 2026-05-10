@@ -158,6 +158,19 @@ fn normalize_app_name(class: &str, title: &str) -> String {
         } else {
             return "terminal".to_string(); 
         }
+    } else if class == "zen-beta" || class == "firefox" {
+        let title_lower = title.to_lowercase();
+        if title_lower.contains("youtube") {
+            return "procrastination".to_string();
+        } else if title_lower.contains("chatgpt") || title_lower.contains("gemini") || title_lower.contains("claude") {
+            return "llm".to_string();
+        } else if title_lower.contains("nix") || title_lower.contains("nixos") {
+            return "nixen".to_string();
+        } else if title_lower.contains("git") || title_lower.contains("github") {
+            return "git".to_string();
+        } else {
+            return "browser".to_string();
+        }
     }
     class.to_string()
 }
