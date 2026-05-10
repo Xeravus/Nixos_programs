@@ -6,6 +6,8 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use rusqlite::{params, Connection};
 use clap::{Parser, Subcommand};
 use serde::Serialize;
+use std::fs::File;
+use fs3::FileExt;
 
 #[derive(Parser)]
 #[command(name = "nix-timetracker")]
@@ -21,6 +23,7 @@ enum Commands {
     Status {
         app: String,
     },
+    Listapps,
 }
 
 #[derive(Serialize)]
@@ -48,10 +51,21 @@ fn main() {
         Commands::Status { app } => {
             get_status(app);
         }
+        Commands::Listapps => {
+            list_apps();
+        }
     }
 }
 
 fn run_daemon() {
+    let lock_file = File::create("/home/cato/.config/nix_timetracker/daemon.lock")
+        .expect("Konnte Lock-Datei nicht erstellen!");
+
+    if lock_file.try_lock_exclusive().is_err() {
+        eprintln!("Abbruch: Der Timetracker-Daemon läuft bereits im Hintergrund!");
+        std::process::exit(1); 
+    }
+    println!("🔒 Lock erfolgreich gesetzt. Daemon startet...");
     let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
         .expect("Konnte Datenbank nicht öffnen! Existiert der Ordner?");
     conn.execute(
@@ -63,7 +77,7 @@ fn run_daemon() {
         )",
         (),
     ).expect("Fehler beim verbinden der Datenbank");
-    // 1. Hole die Umgebungsvariablen
+
     let xdg_runtime_dir = env::var("XDG_RUNTIME_DIR")
         .expect("Konnte XDG_RUNTIME_DIR nicht finden!");
     let hyprland_sig = env::var("HYPRLAND_INSTANCE_SIGNATURE")
@@ -139,7 +153,7 @@ fn run_daemon() {
 }
 
 fn normalize_app_name(class: &str, title: &str) -> String {
-    if class == "kitty" || class == "Alacritty" {
+    if class == "kitty" || class == "kitty-floating" || class == "Alacritty" {
         let title_lower = title.to_lowercase();
         if title_lower.contains("nvim") {
             return "nvim".to_string();
@@ -183,7 +197,7 @@ fn get_status(app_name: &str) {
     let total_seconds: i64 = stmt.query_row(rusqlite::params![app_name], |row| {
         let val: Option<i64> = row.get(0)?;
         Ok(val.unwrap_or(0))
-    }).unwrap_or(0); // Falls die Query generell fehlschlägt, ist es auch 0.
+    }).unwrap_or(0); 
 
     let mut current_level = 0;
     let mut remaining_seconds = total_seconds as f64; 
@@ -208,5 +222,22 @@ fn get_status(app_name: &str) {
     };
     let json_output = serde_json::to_string(&status)
         .expect("Konnte Struct nicht in JSON umwandeln!");
+    println!("{}", json_output);
+}
+
+fn list_apps() {
+    let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
+        .expect("Konnte DB nicht öffnen");
+    let mut stmt = conn.prepare("SELECT DISTINCT name FROM entry ORDER BY name ASC")
+        .expect("Fehler beim Vorbereiten der Query");
+    let app_iter = stmt.query_map([], |row| {
+        let name: String = row.get(0)?;
+        Ok(name)
+    }).expect("Fehler beim Mapping der Daten");
+    let apps: Vec<String> = app_iter
+        .filter_map(|res| res.ok()) 
+        .collect();
+    let json_output = serde_json::to_string(&apps)
+        .expect("Konnte Liste nicht in JSON umwandeln");
     println!("{}", json_output);
 }
