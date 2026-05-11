@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 use serde::Serialize;
 use std::fs::File;
 use fs3::FileExt;
+use notify_rust::Notification;
 
 #[derive(Parser)]
 #[command(name = "nix-timetracker")]
@@ -57,15 +58,25 @@ fn main() {
     }
 }
 
+fn notify_user(title: &str, message: &str) {
+    let fulltitle: String = format!("Nix-Timetracker: {}", title);
+    let fullmessage: String = format!("Nix-Timetracker {}", message);
+    let _ = Notification::new()
+        .summary(&fulltitle)
+        .body(&fullmessage)
+        .appname("Nix-Timetracker")
+        .timeout(5000)
+        .show();
+}
+
 fn run_daemon() {
     let lock_file = File::create("/home/cato/.config/nix_timetracker/daemon.lock")
         .expect("Konnte Lock-Datei nicht erstellen!");
-
     if lock_file.try_lock_exclusive().is_err() {
         eprintln!("Abbruch: Der Timetracker-Daemon läuft bereits im Hintergrund!");
         std::process::exit(1); 
     }
-    println!("🔒 Lock erfolgreich gesetzt. Daemon startet...");
+    notify_user("Started Daemon", "started daemon");
     let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
         .expect("Konnte Datenbank nicht öffnen! Existiert der Ordner?");
     conn.execute(
@@ -77,7 +88,6 @@ fn run_daemon() {
         )",
         (),
     ).expect("Fehler beim verbinden der Datenbank");
-
     let xdg_runtime_dir = env::var("XDG_RUNTIME_DIR")
         .expect("Konnte XDG_RUNTIME_DIR nicht finden!");
     let hyprland_sig = env::var("HYPRLAND_INSTANCE_SIGNATURE")
@@ -91,7 +101,6 @@ fn run_daemon() {
     println!("Versuche Verbindung zu: {:?}", socket_path);
     let stream = UnixStream::connect(&socket_path)
         .expect("Konnte nicht mit dem Hyprland-Socket verbinden!");
-    println!("Erfolgreich verbunden! Warte auf Fenster-Wechsel...\n");
     let reader = BufReader::new(stream);
     let mut last_switch_time = Instant::now();
     let mut current_window_class = String::new();
@@ -119,10 +128,6 @@ fn run_daemon() {
                     let elapsed = last_switch_time.elapsed();
                     let elapsed_seconds = elapsed.as_secs() as i64;
                     if !current_window_class.is_empty() && elapsed_seconds > 0 {
-                        println!(
-                            "Zeit auf das Level-Konto für '{}': {} Sekunden",
-                            current_window_class, elapsed_seconds
-                        );
                         let start_time = SystemTime::now();
                         let timestamp_now = start_time
                             .duration_since(UNIX_EPOCH)
@@ -140,8 +145,6 @@ fn run_daemon() {
                     }
                     current_window_class = new_app.clone();
                     last_switch_time = Instant::now(); // Timer neu starten
-                    
-                    println!("➡️ Fokus auf: {}", current_window_class);
                 }
             }
             Err(e) => {
