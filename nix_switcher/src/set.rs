@@ -1,6 +1,7 @@
 #[warn(unused_imports)]
 use crate::generator::*;
 use crate::parsers::*;
+use crate::notify_user;
 use serde::*;
 use std::fs;
 use std::path::*;
@@ -31,6 +32,7 @@ pub fn set_theme(theme: &str) -> Data {
         theme: String::from(theme),
         ..structin
     };
+    notify_user(&theme, &theme);
     structout
 }
 
