@@ -24,6 +24,7 @@ enum Commands {
         app: String,
     },
     Listapps,
+    Statusall,
 }
 
 #[derive(Serialize)]
@@ -53,6 +54,9 @@ fn main() {
         }
         Commands::Listapps => {
             list_apps();
+        }
+        Commands::Statusall => {
+            status_all();
         }
     }
 }
@@ -240,4 +244,21 @@ fn list_apps() {
     let json_output = serde_json::to_string(&apps)
         .expect("Konnte Liste nicht in JSON umwandeln");
     println!("{}", json_output);
+}
+
+fn status_all() {
+    let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
+        .expect("Konnte DB nicht öffnen");
+    let mut stmt = conn.prepare("SELECT DISTINCT name FROM entry ORDER BY name ASC")
+        .expect("Fehler beim Vorbereiten der Query");
+    let app_iter = stmt.query_map([], |row| {
+        let name: String = row.get(0)?;
+        Ok(name)
+    }).expect("Fehler beim Mapping der Daten");
+    let apps: Vec<String> = app_iter
+        .filter_map(|res| res.ok()) 
+        .collect();
+    for i in apps {
+        get_status(&i);
+    }
 }
