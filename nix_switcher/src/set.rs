@@ -32,7 +32,8 @@ pub fn set_theme(theme: &str) -> Data {
         theme: String::from(theme),
         ..structin
     };
-    notify_user(&theme, &theme);
+    let string = format!("{} -> {}", &structin.theme, &theme);
+    notify_user(&string, &string);
     structout
 }
 
