@@ -22,6 +22,16 @@ pub struct Config {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Recent {
+    pub theme: IndexMap<String, RecentWallpaper>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RecentWallpaper{
+    pub wallpaper: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Wallpapers {
     pub wallpapers: Vec<String>,
 }
@@ -67,6 +77,7 @@ pub fn gen_file_init() {
     gen_file_links();
     gen_file_wallpaper();
     gen_kitty_themes();
+    gen_file_recent();
 }
 
 pub fn gen_file_config() {
@@ -101,6 +112,25 @@ pub fn gen_file_links() {
     let json_path_wallpaper: String = PathBuf::from(gen_path(PathType::Nixswitcher)).join("links.json").display().to_string();
     fs::write(&json_path_wallpaper, &json_string_wallpaper).expect("Konnte Datei nicht schreiben");
     println!("New File in: {}", &json_path_wallpaper);
+}
+
+pub fn gen_file_recent() {
+    let mut recent_map: IndexMap<String, RecentWallpaper> = IndexMap::new();
+    for i in pars_themes() {
+        recent_map.insert(
+            i,
+            RecentWallpaper {
+                wallpaper: String::from("0"),
+            },
+        );
+    };
+    let recent_out = Recent {
+        theme: recent_map,
+    };
+    let json_string_recent = serde_json::to_string_pretty(&recent_out).unwrap();
+    let json_path_recent : String = PathBuf::from(gen_path(PathType::Nixswitcher)).join("recent.json").display().to_string();
+    fs::write(&json_path_recent, &json_string_recent).expect("Konnte Datei nicht schreiben");
+    println!("New File in: {}", &json_path_recent);
 }
 
 pub fn update_file_links() {
