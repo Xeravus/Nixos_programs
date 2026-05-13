@@ -166,6 +166,8 @@ fn normalize_app_name(class: &str, title: &str) -> String {
             return "git".to_string();
         } else if title_lower.contains("ssh") || title_lower.contains("colmena") {
             return "server_admin".to_string();
+        } else if title_lower.contains("rust") || title_lower.contains("rs") {
+            return "rust".to_string();
         } else if title_lower.contains("nix") || title_lower.contains("nixos") || title_lower.contains("nh") || title_lower.contains("restituo") {
             return "nixen".to_string();
         } else if title_lower.contains("hashcat") || title_lower.contains("nmap") || title_lower.contains("aircrack-ng") || title_lower.contains("wifite") || title_lower.contains("wireshark") {
@@ -181,6 +183,8 @@ fn normalize_app_name(class: &str, title: &str) -> String {
             return "procrastination".to_string();
         } else if title_lower.contains("chatgpt") || title_lower.contains("gemini") || title_lower.contains("claude") {
             return "llm".to_string();
+        } else if title_lower.contains("rust") {
+            return "rust".to_string();
         } else if title_lower.contains("nix") || title_lower.contains("nixos") {
             return "nixen".to_string();
         } else if title_lower.contains("git") || title_lower.contains("github") {
