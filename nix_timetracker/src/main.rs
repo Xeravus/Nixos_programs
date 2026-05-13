@@ -162,7 +162,7 @@ fn run_daemon() {
 fn normalize_app_name(class: &str, title: &str) -> String {
     if class == "kitty" || class == "kitty-floating" || class == "Alacritty" {
         let title_lower = title.to_lowercase();
-        if title_lower.contains("nvim") {
+        if title_lower.contains("nvim") || title_lower == "v" || title_lower == "sv" || title_lower.contains("vim") {
             return "nvim".to_string();
         } else if title_lower.contains("btop") || title_lower.contains("htop") {
             return "system_monitor".to_string();
