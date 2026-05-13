@@ -1,5 +1,4 @@
 #![allow(unused_imports)]
-
 mod parsers;
 mod generator;
 mod set;
@@ -158,6 +157,7 @@ fn main() {
             cl_themedir();
             gen_themes_all();
             gen_file_wallpaper();
+            gen_file_recent();
             update_file_links();
         }
         Commands::Genthemes => {
