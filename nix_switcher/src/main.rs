@@ -1,5 +1,4 @@
 #![allow(unused_imports)]
-
 mod parsers;
 mod generator;
 mod set;
