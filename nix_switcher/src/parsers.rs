@@ -106,6 +106,15 @@ pub fn pars_recent() -> Recent {
     loaded_config
 }
 
+pub fn pars_recentwall(theme: &str) -> usize {
+    let recent: Recent = pars_recent();
+    if let Some(recent_wallpaper) = recent.theme.get(theme) {
+        return recent_wallpaper.wallpaper;
+    } else {
+        panic!("Es gibt dieses Theme nicht");
+    }
+}
+
 pub fn pars_rwallpath(index: usize, theme: &str) -> String {
     let config = pars_links();
     if let Some(wallpaper_info) = config.theme.get(theme) {

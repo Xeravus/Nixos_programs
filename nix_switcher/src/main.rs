@@ -29,10 +29,6 @@ enum Commands {
         theme: String,
         index: usize,
     },
-    Set {
-        theme: String,
-        index: usize,
-    },
     Settheme {
         theme: String,
     },
@@ -139,12 +135,9 @@ fn main() {
         Commands::Setg { theme, index } => {
             change(set_global(&theme, *index));
         }
-        Commands::Set { theme, index } => {
-            change(set_relativ(&theme, *index));
-        }
         Commands::Settheme { theme } => {
             change(set_theme(&theme));
-            change(set_relativ(&theme, 0));
+            change(set_relativ(&theme));
         }
         Commands::Setwall { index } => {
             change(set_wall(*index));

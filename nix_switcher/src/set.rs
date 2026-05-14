@@ -16,11 +16,11 @@ pub fn set_global(theme: &str, index: usize) -> Data {
     structout
 }
 
-pub fn set_relativ(theme: &str, index: usize) -> Data {
+pub fn set_relativ(intheme: &str) -> Data {
     let structin = pars_config();
     let structout = Data {
-        theme: String::from(theme),
-        wallpaper: pars_rwallpath(index, theme),
+        theme: String::from(intheme),
+        wallpaper: pars_rwallpath(pars_recentwall(intheme), intheme),
         ..structin
     };
     structout
