@@ -16,11 +16,11 @@ pub fn set_global(theme: &str, index: usize) -> Data {
     structout
 }
 
-pub fn set_relativ(theme: &str, index: usize) -> Data {
+pub fn set_relativ(intheme: &str) -> Data {
     let structin = pars_config();
     let structout = Data {
-        theme: String::from(theme),
-        wallpaper: pars_rwallpath(index, theme.to_string()),
+        theme: String::from(intheme),
+        wallpaper: pars_rwallpath(pars_recentwall(intheme), intheme),
         ..structin
     };
     structout
@@ -40,9 +40,10 @@ pub fn set_theme(theme: &str) -> Data {
 pub fn set_wall(index: usize) -> Data {
     let structin = pars_config();
     let structout = Data {
-        wallpaper: pars_rwallpath(index, structin.theme.clone()),
+        wallpaper: pars_rwallpath(index, &structin.theme),
         ..structin
     };
+    set_recent(index, &structout.theme);
     structout
 }
 
@@ -53,6 +54,18 @@ pub fn set_kittytheme(theme: String) -> Data {
         ..structin
     };
     structout
+}
+
+pub fn set_recent(wallpaperindex: usize, theme: &str) {
+    let mut recent = pars_recent();
+    if let Some(recent_info) = recent.theme.get_mut(theme) {
+        recent_info.wallpaper = wallpaperindex;
+    } else {
+        println!("Fehler: Das Theme '{}' existiert in den recents nicht.", theme);
+    }
+    let file_path = PathBuf::from(gen_path(PathType::Nixswitcher)).join("recent.json").to_str().unwrap().to_string();
+    let json_string = serde_json::to_string_pretty(&recent).unwrap();
+    fs::write(&file_path, &json_string).expect("Konnte wallpapers.json nicht überschreiben");
 }
 
 pub fn change(structin: Data) {

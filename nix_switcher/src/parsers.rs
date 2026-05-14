@@ -96,9 +96,28 @@ pub fn pars_links() -> Config {
     loaded_config
 }
 
-pub fn pars_rwallpath(index: usize, theme: String) -> String {
+
+pub fn pars_recent() -> Recent {
+    let file = PathBuf::from(gen_path(PathType::Nixswitcher)).join("recent.json").display().to_string();
+    let file_content = fs::read_to_string(&file)
+        .expect("recent.json konnte nicht geparst werden");
+    let loaded_config: Recent = serde_json::from_str(&file_content)
+        .expect("Konnte recent.json nicht konvertieren");
+    loaded_config
+}
+
+pub fn pars_recentwall(theme: &str) -> usize {
+    let recent: Recent = pars_recent();
+    if let Some(recent_wallpaper) = recent.theme.get(theme) {
+        return recent_wallpaper.wallpaper;
+    } else {
+        panic!("Es gibt dieses Theme nicht");
+    }
+}
+
+pub fn pars_rwallpath(index: usize, theme: &str) -> String {
     let config = pars_links();
-    if let Some(wallpaper_info) = config.theme.get(&theme) {
+    if let Some(wallpaper_info) = config.theme.get(theme) {
         if index < wallpaper_info.wallpapers.len() {
             return wallpaper_info.wallpapers[index].clone();
         } else {
