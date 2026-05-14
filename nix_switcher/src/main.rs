@@ -77,7 +77,7 @@ pub fn apply(structin: Data) {
 
 pub fn replace_pointer(theme: &Data) {
     let hyprland_path: String = PathBuf::from(gen_path(PathType::Themes)).join(&theme.theme).join("hyprland_template.conf").to_str().unwrap().to_string();
-    let hyprland_base: String = PathBuf::from(gen_path(PathType::Config)).join("hypr").join("color.conf").to_str().unwrap().to_string();
+    let hyprland_base: String = PathBuf::from(gen_path(PathType::Config)).join("hypr").join("hyprland").join("color.conf").to_str().unwrap().to_string();
     let quickshell_path: String = PathBuf::from(gen_path(PathType::Themes)).join(&theme.theme).join("quickshell_template.qml").to_str().unwrap().to_string();
     let quickshell_base: String = PathBuf::from(gen_path(PathType::Config)).join("quickshell").join("color").join("Current.qml").to_str().unwrap().to_string();
     let quickshell_touch: String = PathBuf::from(gen_path(PathType::Config)).join("quickshell").join("shell.qml").to_str().unwrap().to_string();
