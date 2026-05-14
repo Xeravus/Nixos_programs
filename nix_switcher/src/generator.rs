@@ -22,18 +22,18 @@ pub struct Config {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Wallpapers {
+    pub wallpapers: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Recent {
     pub theme: IndexMap<String, RecentWallpaper>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RecentWallpaper{
-    pub wallpaper: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Wallpapers {
-    pub wallpapers: Vec<String>,
+pub struct RecentWallpaper {
+    pub wallpaper: usize,
 }
 
 #[derive(Deserialize)]
@@ -120,7 +120,7 @@ pub fn gen_file_recent() {
         recent_map.insert(
             i,
             RecentWallpaper {
-                wallpaper: String::from("0"),
+                wallpaper: 0,
             },
         );
     };

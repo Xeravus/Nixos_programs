@@ -122,7 +122,6 @@ pub fn link_theme_wallpaper(wallpaperindex: usize, themes: Vec<String>) {
     fs::write(&file_path, &json_string).expect("Konnte wallpapers.json nicht überschreiben");
 }
 
-
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
