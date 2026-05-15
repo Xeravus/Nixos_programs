@@ -162,7 +162,11 @@ fn run_daemon() {
 fn normalize_app_name(class: &str, title: &str) -> String {
     if class == "kitty" || class == "kitty-floating" || class == "Alacritty" {
         let title_lower = title.to_lowercase();
-        if title_lower.contains("nvim") || title_lower == "v" || title_lower == "sv" || title_lower.contains("vim") {
+        if title_lower.contains("rust") || title_lower.contains("rs") {
+            return "rust".to_string();
+        } else if title_lower.contains("nix") || title_lower.contains("nixos") || title_lower.contains("nh") || title_lower.contains("restituo") {
+            return "nixen".to_string();
+        } else if title_lower.contains("nvim") || title_lower == "v" || title_lower == "sv" || title_lower.contains("vim") {
             return "nvim".to_string();
         } else if title_lower.contains("btop") || title_lower.contains("htop") {
             return "system_monitor".to_string();
@@ -170,10 +174,6 @@ fn normalize_app_name(class: &str, title: &str) -> String {
             return "git".to_string();
         } else if title_lower.contains("ssh") || title_lower.contains("colmena") {
             return "server_admin".to_string();
-        } else if title_lower.contains("rust") || title_lower.contains("rs") {
-            return "rust".to_string();
-        } else if title_lower.contains("nix") || title_lower.contains("nixos") || title_lower.contains("nh") || title_lower.contains("restituo") {
-            return "nixen".to_string();
         } else if title_lower.contains("hashcat") || title_lower.contains("nmap") || title_lower.contains("aircrack-ng") || title_lower.contains("wifite") || title_lower.contains("wireshark") {
             return "cybersecurity".to_string();
         } else if title_lower.contains("fastfetch") || title_lower.contains("nitch") {
@@ -215,7 +215,7 @@ fn get_status(app_name: &str) {
     let mut seconds_for_next_level: f64 = 0.0;
 
     loop {
-        let hours_required = 1.0 + 2.0 * 1.15_f64.powi(current_level);
+        let hours_required = 2.0 * 1.15_f64.powi(current_level);
         seconds_for_next_level = hours_required * 3600.0;
         if remaining_seconds >= seconds_for_next_level {
             remaining_seconds -= seconds_for_next_level;
