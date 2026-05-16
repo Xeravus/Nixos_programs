@@ -207,7 +207,7 @@ pub fn get_status(app_name: &str, format: &Format, color_index: Option<usize>) {
     let mut seconds_for_next_level: f64;
 
     loop {
-        let hours_required = 1.0 + 2.0 * 1.15_f64.powi(current_level);
+        let hours_required = 2.0 * 1.15_f64.powi(current_level);
         seconds_for_next_level = hours_required * 3600.0;
         if remaining_seconds >= seconds_for_next_level {
             remaining_seconds -= seconds_for_next_level;
