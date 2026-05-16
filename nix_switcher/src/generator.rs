@@ -58,7 +58,7 @@ pub enum PathType {
 pub fn gen_path(option: PathType) -> String {
     let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
     let config = PathBuf::from(&home).join(".config");
-    let riceconfig = PathBuf::from(&home).join(".config").join("rice");
+    let riceconfig = PathBuf::from(&home).join(".config");
     let nixswitcher = PathBuf::from(&riceconfig).join("nix-switcher");
     let kittythemes = PathBuf::from(&nixswitcher).join("kittythemes");
     let themes = PathBuf::from(&nixswitcher).join("themes");
