@@ -107,7 +107,7 @@ pub fn notify_user(title: &str, message: &str) {
 }
 
 pub fn run_daemon() {
-    let lock_file = File::create("/home/cato/.config/nix_timetracker/daemon.lock")
+    let lock_file = File::create("/home/cato/.config/nix-timetracker/daemon.lock")
         .expect("Konnte Lock-Datei nicht erstellen!");
     if lock_file.try_lock_exclusive().is_err() {
         eprintln!("Abbruch: Der Timetracker-Daemon läuft bereits im Hintergrund!");
