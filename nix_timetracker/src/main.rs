@@ -1,68 +1,101 @@
+#![allow(unused_imports)]
+mod formater;
+mod norm;
+
+use formater::*;
+use norm::*;
+
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH, Duration};
 use rusqlite::{params, Connection};
 use clap::{Parser, Subcommand};
 use serde::Serialize;
 use std::fs::File;
 use fs3::FileExt;
 use notify_rust::Notification;
+use humantime::format_duration;
 
 #[derive(Parser)]
 #[command(name = "nix-timetracker")]
 #[command(about = "Trackt Fensterzeiten und berechnet RPG-Level", long_about = None)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
-enum Commands {
+pub enum Commands {
     Daemon,
     Status {
         app: String,
+        #[arg(short = 'j', long = "json", conflicts_with = "readable")]
+        json: bool,
+        #[arg(short = 'r', long = "readable")]
+        readable: bool,
+        #[arg(short = 'c', long = "compact", conflicts_with = "extended")]
+        compact: bool,
+        #[arg(short = 'e', long = "extended", conflicts_with = "compact")]
+        extended: bool,
     },
     Listapps,
-    Statusall,
+    Statusall {
+        #[arg(short = 'j', long = "json", conflicts_with = "readable")]
+        json: bool,
+        #[arg(short = 'r', long = "readable")]
+        readable: bool,
+        #[arg(short = 'c', long = "compact", conflicts_with = "extended")]
+        compact: bool,
+        #[arg(short = 'e', long = "extended", conflicts_with = "compact")]
+        extended: bool,
+    },
 }
 
 #[derive(Serialize)]
-struct AppStatus {
+pub struct AppStatusJson {
     app: String,
     level: i64,
     progress_percent: u8,
-    total_seconds: i64,
+    total_seconds: u64,
+}
+
+#[derive(Serialize, Debug)]
+pub struct AppStatusReadable {
+    app: String,
+    level: i64,
+    progress_percent: u8,
+    time: String,
 }
 
 #[derive(Debug)]
-struct TrackerEntry {
+pub struct TrackerEntry {
     name: String,
     duration: i64,
     timestamp: i64,
 }
 
-fn main() {
+pub fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Daemon => {
             println!("Starte Nix-Timetracker als Daemon");
             run_daemon();
         }
-        Commands::Status { app } => {
-            get_status(app);
+        Commands::Status { app, json, readable, compact, extended } => {
+            get_status(app, &take_input(*json, *readable, *compact, *extended), None);
         }
         Commands::Listapps => {
             list_apps();
         }
-        Commands::Statusall => {
-            status_all();
+        Commands::Statusall { json, readable, compact, extended } => {
+            get_status_all(take_input(*json, *readable, *compact, *extended));
         }
     }
 }
 
-fn notify_user(title: &str, message: &str) {
+pub fn notify_user(title: &str, message: &str) {
     let fulltitle: String = format!("Nix-Timetracker: {}", title);
     let fullmessage: String = format!("Nix-Timetracker {}", message);
     let _ = Notification::new()
@@ -73,7 +106,7 @@ fn notify_user(title: &str, message: &str) {
         .show();
 }
 
-fn run_daemon() {
+pub fn run_daemon() {
     let lock_file = File::create("/home/cato/.config/nix_timetracker/daemon.lock")
         .expect("Konnte Lock-Datei nicht erstellen!");
     if lock_file.try_lock_exclusive().is_err() {
@@ -159,60 +192,19 @@ fn run_daemon() {
     }
 }
 
-fn normalize_app_name(class: &str, title: &str) -> String {
-    if class == "kitty" || class == "kitty-floating" || class == "Alacritty" {
-        let title_lower = title.to_lowercase();
-        if title_lower.contains("nvim") || title_lower == "v" || title_lower == "sv" || title_lower.contains("vim") {
-            return "nvim".to_string();
-        } else if title_lower.contains("btop") || title_lower.contains("htop") {
-            return "system_monitor".to_string();
-        } else if title_lower.contains("git") || title_lower.contains("gh") {
-            return "git".to_string();
-        } else if title_lower.contains("ssh") || title_lower.contains("colmena") {
-            return "server_admin".to_string();
-        } else if title_lower.contains("rust") || title_lower.contains("rs") {
-            return "rust".to_string();
-        } else if title_lower.contains("nix") || title_lower.contains("nixos") || title_lower.contains("nh") || title_lower.contains("restituo") {
-            return "nixen".to_string();
-        } else if title_lower.contains("hashcat") || title_lower.contains("nmap") || title_lower.contains("aircrack-ng") || title_lower.contains("wifite") || title_lower.contains("wireshark") {
-            return "cybersecurity".to_string();
-        } else if title_lower.contains("fastfetch") || title_lower.contains("nitch") {
-            return "larping".to_string();
-        } else {
-            return "terminal".to_string(); 
-        }
-    } else if class == "zen-beta" || class == "firefox" {
-        let title_lower = title.to_lowercase();
-        if title_lower.contains("youtube") {
-            return "procrastination".to_string();
-        } else if title_lower.contains("chatgpt") || title_lower.contains("gemini") || title_lower.contains("claude") {
-            return "llm".to_string();
-        } else if title_lower.contains("rust") {
-            return "rust".to_string();
-        } else if title_lower.contains("nix") || title_lower.contains("nixos") {
-            return "nixen".to_string();
-        } else if title_lower.contains("git") || title_lower.contains("github") {
-            return "git".to_string();
-        } else {
-            return "browser".to_string();
-        }
-    }
-    class.to_string()
-}
-
-fn get_status(app_name: &str) {
+pub fn get_status(app_name: &str, format: &Format, color_index: Option<usize>) {
     let conn = rusqlite::Connection::open("/home/cato/.config/nix_timetracker/entries.db")
         .expect("Konnte Datenbank für Status-Abfrage nicht öffnen!");
     let mut stmt = conn.prepare("SELECT SUM(duration) FROM entry WHERE name = ?1")
         .expect("Konnte SQL-Query nicht vorbereiten!");
-    let total_seconds: i64 = stmt.query_row(rusqlite::params![app_name], |row| {
+    let total_seconds: u64 = stmt.query_row(rusqlite::params![app_name], |row| {
         let val: Option<i64> = row.get(0)?;
         Ok(val.unwrap_or(0))
-    }).unwrap_or(0); 
+    }).unwrap_or(0).try_into().unwrap(); 
 
     let mut current_level = 0;
     let mut remaining_seconds = total_seconds as f64; 
-    let mut seconds_for_next_level: f64 = 0.0;
+    let mut seconds_for_next_level: f64;
 
     loop {
         let hours_required = 1.0 + 2.0 * 1.15_f64.powi(current_level);
@@ -224,19 +216,18 @@ fn get_status(app_name: &str) {
             break; 
         }
     }
+
     let progress_percent = ((remaining_seconds / seconds_for_next_level) * 100.0).round() as u8;
-    let status = AppStatus {
+    let status = AppStatusJson {
         app: app_name.to_string(),
         level: current_level as i64,      
         progress_percent,
         total_seconds,
     };
-    let json_output = serde_json::to_string(&status)
-        .expect("Konnte Struct nicht in JSON umwandeln!");
-    println!("{}", json_output);
+    format_output(status, format, color_index);
 }
 
-fn list_apps() {
+pub fn list_apps() {
     let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
         .expect("Konnte DB nicht öffnen");
     let mut stmt = conn.prepare("SELECT DISTINCT name FROM entry ORDER BY name ASC")
@@ -253,7 +244,7 @@ fn list_apps() {
     println!("{}", json_output);
 }
 
-fn status_all() {
+pub fn get_status_all(format: Format) {
     let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
         .expect("Konnte DB nicht öffnen");
     let mut stmt = conn.prepare("SELECT DISTINCT name FROM entry ORDER BY name ASC")
@@ -265,7 +256,8 @@ fn status_all() {
     let apps: Vec<String> = app_iter
         .filter_map(|res| res.ok()) 
         .collect();
-    for i in apps {
-        get_status(&i);
+    for (index, i) in apps.iter().enumerate() {
+        get_status(&i, &format, Some(index));
     }
 }
+
