@@ -114,7 +114,7 @@ pub fn run_daemon() {
         std::process::exit(1); 
     }
     notify_user("Started Daemon", "started daemon");
-    let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
+    let conn = Connection::open("/home/cato/.config/nix-timetracker/entries.db")
         .expect("Konnte Datenbank nicht öffnen! Existiert der Ordner?");
     conn.execute(
         "CREATE TABLE IF NOT EXISTS entry (
@@ -193,7 +193,7 @@ pub fn run_daemon() {
 }
 
 pub fn get_status(app_name: &str, format: &Format, color_index: Option<usize>) {
-    let conn = rusqlite::Connection::open("/home/cato/.config/nix_timetracker/entries.db")
+    let conn = rusqlite::Connection::open("/home/cato/.config/nix-timetracker/entries.db")
         .expect("Konnte Datenbank für Status-Abfrage nicht öffnen!");
     let mut stmt = conn.prepare("SELECT SUM(duration) FROM entry WHERE name = ?1")
         .expect("Konnte SQL-Query nicht vorbereiten!");
@@ -228,7 +228,7 @@ pub fn get_status(app_name: &str, format: &Format, color_index: Option<usize>) {
 }
 
 pub fn list_apps() {
-    let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
+    let conn = Connection::open("/home/cato/.config/nix-timetracker/entries.db")
         .expect("Konnte DB nicht öffnen");
     let mut stmt = conn.prepare("SELECT DISTINCT name FROM entry ORDER BY name ASC")
         .expect("Fehler beim Vorbereiten der Query");
@@ -245,7 +245,7 @@ pub fn list_apps() {
 }
 
 pub fn get_status_all(format: Format) {
-    let conn = Connection::open("/home/cato/.config/nix_timetracker/entries.db")
+    let conn = Connection::open("/home/cato/.config/nix-timetracker/entries.db")
         .expect("Konnte DB nicht öffnen");
     let mut stmt = conn.prepare("SELECT DISTINCT name FROM entry ORDER BY name ASC")
         .expect("Fehler beim Vorbereiten der Query");
