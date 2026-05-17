@@ -48,7 +48,6 @@ pub struct Colors {
 }
 
 pub enum PathType {
-    Riceconfig,
     Nixswitcher,
     Kittythemes,
     Themes,
@@ -58,12 +57,10 @@ pub enum PathType {
 pub fn gen_path(option: PathType) -> String {
     let home = env::var("HOME").expect("Konnte die Homevariable nicht finden");
     let config = PathBuf::from(&home).join(".config");
-    let riceconfig = PathBuf::from(&home).join(".config");
-    let nixswitcher = PathBuf::from(&riceconfig).join("nix-switcher");
+    let nixswitcher = PathBuf::from(&config).join("nix-switcher");
     let kittythemes = PathBuf::from(&nixswitcher).join("kittythemes");
     let themes = PathBuf::from(&nixswitcher).join("themes");
     let result: PathBuf = match option {
-        PathType::Riceconfig => riceconfig,
         PathType::Nixswitcher => nixswitcher,
         PathType::Kittythemes => kittythemes,
         PathType::Themes => themes,
@@ -86,7 +83,7 @@ pub fn gen_file_config() {
         kittytheme: String::from("dracula"),
         wallpaper: String::from("dracula"),
         themedir: PathBuf::from(gen_path(PathType::Themes)).display().to_string(),
-        wallpaperdir: PathBuf::from(gen_path(PathType::Riceconfig)).join("wallpaper").to_str().unwrap().to_string(),
+        wallpaperdir: PathBuf::from(gen_path(PathType::Nixswitcher)).join("wallpaper").to_str().unwrap().to_string(),
         templatedir: PathBuf::from(gen_path(PathType::Nixswitcher)).join("template").to_str().unwrap().to_string(),
     };
     let json_string = serde_json::to_string_pretty(&basic_conf).unwrap();
