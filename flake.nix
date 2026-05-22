@@ -59,7 +59,7 @@
     };
     packages."x86_64-linux" = {
       parser = naerskLib.buildPackage {
-        src = ./nix_parser/.;
+        src = ./nix-parser/.;
         buildInputs = [
           pkgs.glib
         ];
@@ -68,7 +68,7 @@
         ];
       };
       switcher = naerskLib.buildPackage {
-        src = ./nix_switcher/.;
+        src = ./nix-switcher/.;
         buildInputs = [
           pkgs.pkg-config
         ];
@@ -77,7 +77,16 @@
         ];
       };
       timetracker = naerskLib.buildPackage {
-        src = ./nix_timetracker/.;
+        src = ./nix-timetracker/.;
+        buildInputs = [
+          pkgs.pkg-config
+        ];
+        nativeBuildInputs = [
+          pkgs.pkg-config
+        ];
+      };
+      formare = naerskLib.buildPackage {
+        src = ./nix-formare/.;
         buildInputs = [
           pkgs.pkg-config
         ];
