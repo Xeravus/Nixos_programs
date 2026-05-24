@@ -1,8 +1,12 @@
 mod ssh;
 mod files;
+mod git;
+mod nix;
 
 use ssh::*;
 use files::*;
+use git::*;
+use nix::*;
 
 use std::process::{self, Command};
 use std::collections::HashMap;
@@ -26,6 +30,7 @@ pub enum Commands {
     Ping {
         ip: String,
     },
+    Clean,
     Debug {
         #[arg(short, long)]
         tailfetch: bool,
@@ -71,6 +76,10 @@ pub fn main() {
         Commands::Ping { ip } => {
             ssh_ping(ip);
         },
+        Commands::Clean => {
+            files_crylia_finish();
+            git_full(String::from("Xanterella Remote-Install cleanup"));
+        },
         Commands::Debug { tailfetch, selecthost, gethardware } => {
             if *tailfetch {
                 debug!("{:?}", tailscale_fetch());
@@ -93,8 +102,12 @@ pub fn remote_install() {
     ssh_ping(&target_ip);
     ssh_get_hardware(&target_ip);
     files_crylia_start(ssh_get_hardware(&target_ip));
+    git_full(String::from("Xanterella Remote-Install"));
+    nix_check();
+    nix_install(&target_ip);
     // -----------------------------------------------------
     files_crylia_finish();
+    git_full(String::from("Xanterella Remote-Install cleanup"));
 }
 
 pub fn tailscale_fetch() -> Taildevices {
@@ -105,7 +118,7 @@ pub fn tailscale_fetch() -> Taildevices {
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte 'tailscale status --json' nicht ausführen: {}", err); process::exit(1); });
     if !tail_status.status.success() {
         error!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
-        panic!("Abbruch");
+        process::exit(1);
     }
     info!("[ OK ] - Fetched Tailscale Devices");
     serde_json::from_slice::<Taildevices>(&tail_status.stdout)
@@ -130,7 +143,7 @@ pub fn select_host(hosts: Taildevices) -> String {
         },
         Err(e) => {
             error!("[ FAILED ] - Konnte den Input nicht auslesen: {}", e);
-            panic!("Abbruch");
+            process::exit(1);
         }
     }
     output_ip 

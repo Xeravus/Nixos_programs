@@ -31,7 +31,7 @@ pub fn ssh_get_hardware(ip: &String) -> String {
     let ssh_command = format!("root@{}", ip);
     let ssh = Command::new("ssh")
         .arg(&ssh_command)
-        .arg("nixos-generate-config --show-hardware-config")
+        .arg("nixos-generate-config --no-filesystems --show-hardware-config")
         .output()
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte die Hardware Config nicht erstellen: {}", err); process::exit(1); });
 
