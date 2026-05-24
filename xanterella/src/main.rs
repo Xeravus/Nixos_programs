@@ -1,8 +1,6 @@
-/*
 mod ssh;
 
 use ssh::*;
-*/
 
 use std::process::Command;
 use std::path;
@@ -23,9 +21,14 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Hostname,
+    Ping {
+        ip: String,
+    },
     Debug {
         #[arg(short, long)]
         tailfetch: bool,
+        #[arg(short, long)]
+        selecthost: bool,
     },
     RemoteInstall,
 }
@@ -50,9 +53,14 @@ pub fn main() {
         Commands::Hostname => {
             let _ = Command::new("hostname") .spawn();
         },
-        Commands::Debug { tailfetch } => {
+        Commands::Ping { ip } => {
+            ssh_ping(ip);
+        },
+        Commands::Debug { tailfetch, selecthost } => {
             if *tailfetch {
                 println!("{:?}", tailscale_fetch());
+            } else if *selecthost {
+                select_host(tailscale_fetch());
             } else {
                 println!("No Args")
             }
@@ -72,7 +80,7 @@ pub fn tailscale_fetch() -> Taildevices {
         .output()
         .expect("Konnte den Befehl: tailscale status --json nicht ausführen");
     if !tail_status.status.success() {
-        panic!("Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
+        panic!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
     }
     serde_json::from_slice::<Taildevices>(&tail_status.stdout)
         .expect("Konnte das Tailscale-JSON nicht parsen")
@@ -95,7 +103,7 @@ pub fn select_host(hosts: Taildevices) {
             }
         },
         Err(e) => {
-            panic!("Konnte den Input nicht auslesen: {}", e);
+            panic!("[ FAILED ] - Konnte den Input nicht auslesen: {}", e);
         }
     }
 }
