@@ -1,15 +1,13 @@
 mod ssh;
+mod files;
 
 use ssh::*;
+use files::*;
 
-use std::process::Command;
-use std::path;
+use std::process::{self, Command};
 use std::collections::HashMap;
-use notify_rust::Notification;
 use clap::{Parser, Subcommand};
 use log::{debug, info, error};
-use env_logger::init;
-use serde_json::*;
 use inquire::Select;
 
 #[derive(Parser)]
@@ -91,7 +89,12 @@ pub fn main() {
 }
 
 pub fn remote_install() {
-    ssh_ping(&select_host(tailscale_fetch()));
+    let target_ip = select_host(tailscale_fetch());
+    ssh_ping(&target_ip);
+    ssh_get_hardware(&target_ip);
+    files_crylia_start(ssh_get_hardware(&target_ip));
+    // -----------------------------------------------------
+    files_crylia_finish();
 }
 
 pub fn tailscale_fetch() -> Taildevices {
@@ -99,15 +102,14 @@ pub fn tailscale_fetch() -> Taildevices {
         .arg("status")
         .arg("--json")
         .output()
-        .expect("Konnte den Befehl: tailscale status --json nicht ausführen");
-    if tail_status.status.success() {
-        info!("[ OK ] - Fetched Tailscale Devices");
-    } else if !tail_status.status.success() {
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte 'tailscale status --json' nicht ausführen: {}", err); process::exit(1); });
+    if !tail_status.status.success() {
         error!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
         panic!("Abbruch");
     }
+    info!("[ OK ] - Fetched Tailscale Devices");
     serde_json::from_slice::<Taildevices>(&tail_status.stdout)
-        .expect("Konnte das Tailscale-JSON nicht parsen")
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte den Output von Tailscale nicht parsen: {}", err); process::exit(1); })
 }
 
 pub fn select_host(hosts: Taildevices) -> String {

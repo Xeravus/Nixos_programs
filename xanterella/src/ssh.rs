@@ -1,5 +1,4 @@
-use std::process::Command;
-
+use std::process::{self, Command};
 use log::{debug, info, error};
 
 pub fn ssh_ping(ip: &String) {
@@ -8,7 +7,7 @@ pub fn ssh_ping(ip: &String) {
         .args(["-W", "1"])
         .arg(ip)
         .output()
-        .expect("Konnte den Ping nicht starten");
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte Ping nicht starten: {}", err); process::exit(1); });
 
     if !ping.status.success() {
         error!("[ FAILED ] - Konnte das Gerät nicht pingen: {}", ip);
@@ -20,12 +19,12 @@ pub fn ssh_ping(ip: &String) {
     let ssh = Command::new("ssh")
         .arg(&ssh_command)
         .output()
-        .expect("Konnte den SSH nicht starten");
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte Tailscale nicht starten: {}", err); process::exit(1); });
     if !ssh.status.success() {
-        error!("[ FAILED ] - Konnte das Gerät nicht sshen: {}", ssh_command);
+        error!("[ FAILED ] - Konnte das Gerät nicht über ssh erreichen: {}", ssh_command);
         panic!("Abbruch");
     }
-    info!("[ OK ] - SSH erfolgreich");
+    info!("[ OK ] - SSH-PING erfolgreich");
 }
 
 pub fn ssh_get_hardware(ip: &String) -> String {
@@ -34,7 +33,7 @@ pub fn ssh_get_hardware(ip: &String) -> String {
         .arg(&ssh_command)
         .arg("nixos-generate-config --show-hardware-config")
         .output()
-        .expect("[ FAILED ] - Konnte die Hardware Config nicht erstellen lassen");
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte die Hardware Config nicht erstellen: {}", err); process::exit(1); });
 
     if !ssh.status.success() {
         let err = String::from_utf8_lossy(&ssh.stderr);
