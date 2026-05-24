@@ -1,6 +1,6 @@
 use std::process::Command;
 
-pub fn ssh_ping(ip: &String) /*-> bool*/ {
+pub fn ssh_ping(ip: &String) {
     let ping = Command::new("ping")
         .args(["-c", "1"])
         .args(["-W", "1"])
