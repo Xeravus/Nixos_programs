@@ -42,20 +42,6 @@ pub enum Commands {
     RemoteInstall,
 }
 
-#[derive(serde::Deserialize, Debug)]
-pub struct Taildevices {
-    #[serde(rename = "Peer")]
-    pub devices: HashMap<String, DeviceInfo>,
-}
-
-#[derive(serde::Deserialize, Debug)]
-pub struct DeviceInfo {
-    #[serde(rename = "HostName")]
-    pub name: String,
-    #[serde(rename = "TailscaleIPs")]
-    pub ip: Vec<String>,
-}
-
 pub fn main() {
     let cli = Cli::parse();
     let log_level = if cli.debug {
@@ -108,21 +94,6 @@ pub fn remote_install() {
     // -----------------------------------------------------
     files_crylia_finish();
     git_full(String::from("Xanterella Remote-Install cleanup"));
-}
-
-pub fn tailscale_fetch() -> Taildevices {
-    let tail_status = Command::new("tailscale")
-        .arg("status")
-        .arg("--json")
-        .output()
-        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte 'tailscale status --json' nicht ausführen: {}", err); process::exit(1); });
-    if !tail_status.status.success() {
-        error!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
-        process::exit(1);
-    }
-    info!("[ OK ] - Fetched Tailscale Devices");
-    serde_json::from_slice::<Taildevices>(&tail_status.stdout)
-        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte den Output von Tailscale nicht parsen: {}", err); process::exit(1); })
 }
 
 pub fn select_host(hosts: Taildevices) -> String {
