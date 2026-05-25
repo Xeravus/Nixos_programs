@@ -30,16 +30,18 @@ pub fn pars_drives() -> Drives {
     let mut drives = Drives {
         medium: HashMap::new(),
     };
+
     let fdisk = Command::new("sudo")
         .arg("fdisk")
         .arg("-l")
         .output()
-        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte die Partitionen nicht auslesen: {}", err); process::exit(1); });
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte fdisk nicht starten: {}", err); process::exit(1); });
     if !fdisk.status.success() {
         let err = String::from_utf8_lossy(&fdisk.stderr);
         error!("[ FAILED ] - Fehler beim Auslesen der Partitionen: {}", err);
         process::exit(1);
     }
+
     let output = String::from_utf8_lossy(&fdisk.stdout);
     debug!("fdisk output: \n{}", output);
     for i in output.lines() {
@@ -61,18 +63,19 @@ pub fn pars_drives() -> Drives {
     drives
 }
 
-
-
 pub fn tailscale_fetch() -> Taildevices {
+
     let tail_status = Command::new("tailscale")
         .arg("status")
         .arg("--json")
         .output()
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte 'tailscale status --json' nicht ausführen: {}", err); process::exit(1); });
     if !tail_status.status.success() {
-        error!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
+        let err = String::from_utf8_lossy(&tail_status.stderr);
+        error!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst: {}", err);
         process::exit(1);
     }
+
     info!("[ OK ] - Fetched Tailscale Devices");
     serde_json::from_slice::<Taildevices>(&tail_status.stdout)
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte den Output von Tailscale nicht parsen: {}", err); process::exit(1); })

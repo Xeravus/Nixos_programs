@@ -1,6 +1,6 @@
 mod check;
 mod files;
-//mod gen;
+mod generator;
 mod get;
 mod git;
 mod nix;
@@ -8,6 +8,7 @@ mod parse;
 
 use check::*;
 use files::*;
+use generator::*;
 use get::*;
 use git::*;
 use nix::*;
