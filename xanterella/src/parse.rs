@@ -8,8 +8,8 @@ pub struct Drives {
 }
 
 pub struct Partition {
-    pub name: String,
-    pub size: i64,
+    pub partitions: String,
+    pub size: String,
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -27,13 +27,12 @@ pub struct DeviceInfo {
 }
 
 pub fn pars_drives() -> Drives {
-    let mut drives: Drives {
+    let mut drives = Drives {
         medium: HashMap::new(),
     };
     let fdisk = Command::new("sudo")
         .arg("fdisk")
         .arg("-l")
-        .args(["|", "grep", "'^Disk /'"])
         .output()
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte die Partitionen nicht auslesen: {}", err); process::exit(1); });
     if !fdisk.status.success() {
@@ -44,26 +43,22 @@ pub fn pars_drives() -> Drives {
     let output = String::from_utf8_lossy(&fdisk.stdout);
     debug!("fdisk output: \n{}", output);
     for i in output.lines() {
-        debug!("fdisk line output: \n{}", i);
-        let Some((links, rechts)) = i.split_once(": ") {
-            let name = links.replace("Disk /dev/", "") else {
-                error!("[ FAILED ] - Fehler beim Parsen der Partitionsoutput: {}", err);
-                process::exit(1);
-            };
-            let Some((groesse, _rest)) = rechts.split_once(" bytes, ") {
-                let index: Partition {
-                    name: String::from(&name),
-                    size: groesse,
-                }
-            } else {
-                error!("[ FAILED ] - Fehler beim Parsen der Partitionsoutput: {}", err);
-                process::exit(1);
-            };
-        } else { 
-            error!("[ FAILED ] - Fehler beim Parsen der Partitionsoutput: {}", err);
-            process::exit(1);
-        };
-    };
+        if !i.starts_with("Disk /dev/") {
+            continue;
+        }
+        debug!("gefundende Zeilen: {}", i);
+        if let Some((links, rechts)) = i.split_once(", ") {
+            let name = links.replace("Disk /dev/", "");
+            if let Some((groesse, _rest)) = rechts.split_once(", ") {
+                let partition = Partition {
+                    partitions: String::from("TBD"),
+                    size: groesse.to_string(),
+                };
+                drives.medium.insert(name, partition);
+            }
+        }
+    }
+    drives
 }
 
 

@@ -1,12 +1,17 @@
-mod ssh;
+mod check;
 mod files;
+//mod gen;
+mod get;
 mod git;
 mod nix;
+mod parse;
 
-use ssh::*;
+use check::*;
 use files::*;
+use get::*;
 use git::*;
 use nix::*;
+use parse::*;
 
 use std::process::{self, Command};
 use std::collections::HashMap;
