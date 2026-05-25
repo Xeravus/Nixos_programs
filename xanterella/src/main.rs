@@ -122,5 +122,6 @@ pub fn select_host(hosts: Taildevices) -> String {
             process::exit(1);
         }
     }
+    debug!("Output IP: {}", output_ip);
     output_ip 
 }

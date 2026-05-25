@@ -20,7 +20,7 @@ pub fn files_crylia_start(config: String) {
         ./hardware-configuration.nix
         {}", anfang, ende);
 
-     debug!("Neuer Inhalt: \n{}", whole_content);
+    debug!("Neuer Inhalt: \n{}", whole_content);
     fs::write(&file_path1, &whole_content)
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte die Config von Crylia nicht überschreiben: {}", err); process::exit(1); });
     info!("[ OK ] - Configuration von Crylia überschreiben");
