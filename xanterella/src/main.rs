@@ -4,7 +4,6 @@ mod generator;
 mod get;
 mod git;
 mod nix;
-mod parse;
 
 use check::*;
 use files::*;
@@ -12,7 +11,6 @@ use generator::*;
 use get::*;
 use git::*;
 use nix::*;
-use parse::*;
 
 use std::process::{self, Command};
 use std::collections::HashMap;
@@ -74,11 +72,11 @@ pub fn main() {
         },
         Commands::Debug { tailfetch, selecthost, gethardware } => {
             if *tailfetch {
-                debug!("{:?}", tailscale_fetch());
+                debug!("{:?}", get_taildevices());
             } else if *selecthost {
-                debug!("{}", select_host(tailscale_fetch()));
+                debug!("{}", select_host(get_taildevices()));
             } else if *gethardware {
-                ssh_get_hardware(&String::from("127.0.0.1"));
+                get_ssh_hardware(&String::from("127.0.0.1"));
             } else {
                 debug!("No Args")
             }
@@ -90,10 +88,10 @@ pub fn main() {
 }
 
 pub fn remote_install() {
-    let target_ip = select_host(tailscale_fetch());
+    let target_ip = select_host(get_taildevices());
     ssh_ping(&target_ip);
-    ssh_get_hardware(&target_ip);
-    files_crylia_start(ssh_get_hardware(&target_ip));
+    get_ssh_hardware(&target_ip);
+    files_crylia_start(get_ssh_hardware(&target_ip));
     git_full(String::from("Xanterella Remote-Install"));
     nix_check();
     nix_install(&target_ip);
