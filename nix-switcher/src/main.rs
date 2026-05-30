@@ -48,6 +48,7 @@ enum Commands {
         index: usize,
         theme: Vec<String>,
     },
+    Current,
 }
 
 pub fn notify_user(title: &str, message: &str) {
@@ -161,6 +162,9 @@ fn main() {
         Commands::Apply => {
             let config = pars_config();
             apply(config);
+        }
+        Commands::Current => {
+            pars_current();
         }
     }
 }
