@@ -128,4 +128,9 @@ pub fn pars_rwallpath(index: usize, theme: &str) -> String {
     }
 }
 
-
+pub fn pars_current() {
+    let config = pars_config();
+    println!("Theme: {}", config.theme);
+    println!("Kittytheme: {}", config.kittytheme);
+    println!("Wallpaper: {}", config.wallpaper);
+}

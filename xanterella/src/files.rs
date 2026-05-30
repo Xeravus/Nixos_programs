@@ -2,6 +2,8 @@ use log::{debug, info, error};
 use std::process::{self, Command};
 use std::fs;
 
+use crate::generator::*;
+
 pub fn files_crylia_start(config: String) {
     let file_path1 = "/home/cato/nixos-config/hosts/crylia/configuration.nix";
     let file_path2 = "/home/cato/nixos-config/hosts/crylia/hardware-configuration.nix";
@@ -20,7 +22,7 @@ pub fn files_crylia_start(config: String) {
         ./hardware-configuration.nix
         {}", anfang, ende);
 
-     debug!("Neuer Inhalt: \n{}", whole_content);
+    debug!("Neuer Inhalt: \n{}", whole_content);
     fs::write(&file_path1, &whole_content)
         .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte die Config von Crylia nicht überschreiben: {}", err); process::exit(1); });
     info!("[ OK ] - Configuration von Crylia überschreiben");
@@ -44,12 +46,11 @@ pub fn files_crylia_finish() {
 }
 
 pub fn files_alejandra() {
-    let folder_path = "/home/cato/nixos-config";
     let alejandra = Command::new("alejandra")
         .arg(".")
-        .current_dir(folder_path)
+        .current_dir(gen_path(Paths::Nixconf))
         .output()
-        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte Alejandra nicht ausführen: {}", err); process::exit(1); });
+        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte Alejandra nicht starten: {}", err); process::exit(1); });
     debug!("Alejandra: \n{}", String::from_utf8_lossy(&alejandra.stdout));
     if !alejandra.status.success() {
         let err = String::from_utf8_lossy(&alejandra.stderr);

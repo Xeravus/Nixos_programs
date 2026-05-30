@@ -1,10 +1,14 @@
-mod ssh;
+mod check;
 mod files;
+mod generator;
+mod get;
 mod git;
 mod nix;
 
-use ssh::*;
+use check::*;
 use files::*;
+use generator::*;
+use get::*;
 use git::*;
 use nix::*;
 
@@ -42,20 +46,6 @@ pub enum Commands {
     RemoteInstall,
 }
 
-#[derive(serde::Deserialize, Debug)]
-pub struct Taildevices {
-    #[serde(rename = "Peer")]
-    pub devices: HashMap<String, DeviceInfo>,
-}
-
-#[derive(serde::Deserialize, Debug)]
-pub struct DeviceInfo {
-    #[serde(rename = "HostName")]
-    pub name: String,
-    #[serde(rename = "TailscaleIPs")]
-    pub ip: Vec<String>,
-}
-
 pub fn main() {
     let cli = Cli::parse();
     let log_level = if cli.debug {
@@ -82,11 +72,11 @@ pub fn main() {
         },
         Commands::Debug { tailfetch, selecthost, gethardware } => {
             if *tailfetch {
-                debug!("{:?}", tailscale_fetch());
+                debug!("{:?}", get_taildevices());
             } else if *selecthost {
-                debug!("{}", select_host(tailscale_fetch()));
+                debug!("{}", select_host(get_taildevices()));
             } else if *gethardware {
-                ssh_get_hardware(&String::from("127.0.0.1"));
+                get_ssh_hardware(&String::from("127.0.0.1"));
             } else {
                 debug!("No Args")
             }
@@ -98,31 +88,16 @@ pub fn main() {
 }
 
 pub fn remote_install() {
-    let target_ip = select_host(tailscale_fetch());
+    let target_ip = select_host(get_taildevices());
     ssh_ping(&target_ip);
-    ssh_get_hardware(&target_ip);
-    files_crylia_start(ssh_get_hardware(&target_ip));
+    get_ssh_hardware(&target_ip);
+    files_crylia_start(get_ssh_hardware(&target_ip));
     git_full(String::from("Xanterella Remote-Install"));
     nix_check();
     nix_install(&target_ip);
     // -----------------------------------------------------
     files_crylia_finish();
     git_full(String::from("Xanterella Remote-Install cleanup"));
-}
-
-pub fn tailscale_fetch() -> Taildevices {
-    let tail_status = Command::new("tailscale")
-        .arg("status")
-        .arg("--json")
-        .output()
-        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte 'tailscale status --json' nicht ausführen: {}", err); process::exit(1); });
-    if !tail_status.status.success() {
-        error!("[ FAILED ] - Tailscale Status ist Fehlgeschlagen, bist du eingelogt, wurde das JSON nicht richtig geparst, ...");
-        process::exit(1);
-    }
-    info!("[ OK ] - Fetched Tailscale Devices");
-    serde_json::from_slice::<Taildevices>(&tail_status.stdout)
-        .unwrap_or_else(|err| { error!("[ FAILED ] - Konnte den Output von Tailscale nicht parsen: {}", err); process::exit(1); })
 }
 
 pub fn select_host(hosts: Taildevices) -> String {
@@ -146,5 +121,6 @@ pub fn select_host(hosts: Taildevices) -> String {
             process::exit(1);
         }
     }
+    debug!("Output IP: {}", output_ip);
     output_ip 
 }
